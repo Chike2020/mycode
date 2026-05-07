@@ -13,7 +13,7 @@ const COOKIE_OPTS = {
 
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
-  const { name, email, password, orgName } = req.body;
+  const { name, email, password, orgName, inviteToken } = req.body;
   if (!name || !email || !password) return res.status(400).json({ error: 'name, email, password required' });
   if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' });
 
@@ -24,11 +24,30 @@ router.post('/register', async (req, res) => {
   const userId = uuid();
   db.prepare('INSERT INTO users (id, email, name, password_hash) VALUES (?, ?, ?, ?)').run(userId, email.toLowerCase(), name, hash);
 
-  // Create a default org for this user
-  const org = _createOrg(orgName || `${name}'s Organisation`, userId);
+  let orgId, orgNameResult, role = 'owner';
 
-  const token = signToken({ id: userId, email: email.toLowerCase(), name, orgId: org.id, role: 'owner' });
-  res.cookie('grc_token', token, COOKIE_OPTS).json({ ok: true, user: { id: userId, email, name }, org });
+  if (inviteToken) {
+    const inv = db.prepare('SELECT * FROM invitations WHERE token = ?').get(inviteToken);
+    if (inv && new Date(inv.expires_at) > new Date()) {
+      // Join the invited org
+      db.prepare('INSERT INTO org_members (org_id, user_id, role) VALUES (?, ?, ?)').run(inv.org_id, userId, inv.role);
+      db.prepare('DELETE FROM invitations WHERE id = ?').run(inv.id);
+      const invOrg = db.prepare('SELECT id, name, slug FROM organizations WHERE id = ?').get(inv.org_id);
+      orgId = invOrg.id;
+      orgNameResult = invOrg.name;
+      role = inv.role;
+    }
+  }
+
+  if (!orgId) {
+    // Create a default org for this user
+    const org = _createOrg(orgName || `${name}'s Organisation`, userId);
+    orgId = org.id;
+    orgNameResult = org.name;
+  }
+
+  const token = signToken({ id: userId, email: email.toLowerCase(), name, orgId, role });
+  res.cookie('grc_token', token, COOKIE_OPTS).json({ ok: true, user: { id: userId, email, name }, org: { id: orgId, name: orgNameResult } });
 });
 
 // POST /api/auth/login
