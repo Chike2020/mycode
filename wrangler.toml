@@ -1,2 +1,5 @@
 name = "lexsec-advisory"
-pages_build_output_dir = "lexsec-site"
+compatibility_date = "2026-05-26"
+
+[assets]
+directory = "./lexsec-site"
