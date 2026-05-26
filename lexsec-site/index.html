@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="LexSec Advisory — GRC consulting, cybersecurity advisory, and compliance strategy.">
+<title>LexSec Advisory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink:     #0f172a;
+    --ink2:    #475569;
+    --ink3:    #94a3b8;
+    --accent:  #1d4ed8;
+    --accent2: #3b82f6;
+    --bg:      #ffffff;
+    --bg2:     #f8fafc;
+    --bg3:     #f1f5f9;
+    --border:  #e2e8f0;
+    --r:       8px;
+  }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    line-height: 1.6;
+  }
+
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* ── Nav ── */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 5vw;
+    height: 64px;
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-logo { font-weight: 700; font-size: 1.1rem; letter-spacing: -0.02em; }
+  .nav-logo span { color: var(--accent); }
+  .nav-links { display: flex; gap: 2rem; }
+  .nav-links a { font-size: 0.875rem; font-weight: 500; color: var(--ink2); }
+  .nav-links a:hover { color: var(--ink); text-decoration: none; }
+  .nav-cta {
+    background: var(--accent); color: #fff !important;
+    padding: 8px 18px; border-radius: 6px; font-size: 0.875rem; font-weight: 500;
+  }
+  .nav-cta:hover { background: var(--accent2); }
+
+  /* ── Hero ── */
+  .hero {
+    display: flex; flex-direction: column; align-items: center;
+    text-align: center;
+    padding: 100px 5vw 80px;
+    background: linear-gradient(160deg, #eff6ff 0%, #ffffff 60%);
+  }
+  .hero-tag {
+    display: inline-block;
+    background: #dbeafe; color: var(--accent);
+    font-size: 0.75rem; font-weight: 600; letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 4px 12px; border-radius: 20px;
+    margin-bottom: 24px;
+  }
+  .hero h1 {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 700; letter-spacing: -0.03em; line-height: 1.15;
+    max-width: 800px;
+  }
+  .hero h1 em { font-style: normal; color: var(--accent); }
+  .hero p {
+    margin-top: 20px; font-size: 1.1rem; color: var(--ink2);
+    max-width: 600px;
+  }
+  .hero-actions { display: flex; gap: 12px; margin-top: 36px; flex-wrap: wrap; justify-content: center; }
+  .btn-primary {
+    background: var(--accent); color: #fff;
+    padding: 12px 28px; border-radius: var(--r);
+    font-weight: 600; font-size: 0.95rem;
+    transition: background .15s;
+  }
+  .btn-primary:hover { background: var(--accent2); text-decoration: none; }
+  .btn-ghost {
+    border: 1.5px solid var(--border); color: var(--ink);
+    padding: 12px 28px; border-radius: var(--r);
+    font-weight: 500; font-size: 0.95rem;
+    transition: border-color .15s;
+  }
+  .btn-ghost:hover { border-color: var(--ink2); text-decoration: none; }
+
+  /* ── Section ── */
+  section { padding: 80px 5vw; }
+  .section-label {
+    font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 12px;
+  }
+  .section-title {
+    font-size: clamp(1.5rem, 3vw, 2.2rem);
+    font-weight: 700; letter-spacing: -0.02em; line-height: 1.2;
+    max-width: 560px;
+  }
+  .section-sub { margin-top: 12px; color: var(--ink2); max-width: 540px; font-size: 1rem; }
+
+  /* ── Services grid ── */
+  .services { background: var(--bg2); }
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 24px;
+    margin-top: 48px;
+  }
+  .service-card {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 12px; padding: 28px;
+    transition: box-shadow .2s, border-color .2s;
+  }
+  .service-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,.06); border-color: #bfdbfe; }
+  .service-icon {
+    width: 44px; height: 44px; border-radius: 10px;
+    background: #dbeafe; display: flex; align-items: center;
+    justify-content: center; font-size: 1.4rem; margin-bottom: 16px;
+  }
+  .service-card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 8px; }
+  .service-card p  { font-size: 0.875rem; color: var(--ink2); line-height: 1.6; }
+
+  /* ── Products ── */
+  .products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px; margin-top: 48px;
+  }
+  .product-card {
+    border: 1px solid var(--border); border-radius: 12px; padding: 28px;
+    display: flex; flex-direction: column; gap: 12px;
+    transition: box-shadow .2s;
+  }
+  .product-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,.07); text-decoration: none; }
+  .product-badge {
+    display: inline-block; font-size: 0.7rem; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 3px 10px; border-radius: 20px;
+    width: fit-content;
+  }
+  .badge-blue   { background: #dbeafe; color: #1d4ed8; }
+  .badge-green  { background: #dcfce7; color: #15803d; }
+  .badge-purple { background: #ede9fe; color: #6d28d9; }
+  .product-card h3 { font-size: 1.1rem; font-weight: 700; color: var(--ink); }
+  .product-card p  { font-size: 0.875rem; color: var(--ink2); flex: 1; }
+  .product-link { font-size: 0.875rem; font-weight: 600; color: var(--accent); }
+
+  /* ── About ── */
+  .about { background: var(--ink); color: #fff; }
+  .about .section-label { color: #93c5fd; }
+  .about .section-title { color: #fff; }
+  .about .section-sub   { color: #94a3b8; }
+  .about-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 48px; margin-top: 48px; align-items: start;
+  }
+  .about-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .stat-card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px; padding: 24px;
+  }
+  .stat-num { font-size: 2rem; font-weight: 700; color: #93c5fd; }
+  .stat-label { font-size: 0.8rem; color: #94a3b8; margin-top: 4px; }
+
+  /* ── Contact ── */
+  .contact { background: var(--bg2); }
+  .contact-box {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 16px; padding: 48px;
+    max-width: 560px;
+    display: flex; flex-direction: column; gap: 16px;
+    margin-top: 40px;
+  }
+  .form-row { display: flex; flex-direction: column; gap: 6px; }
+  .form-row label { font-size: 0.8rem; font-weight: 600; color: var(--ink2); }
+  .form-row input, .form-row textarea, .form-row select {
+    padding: 10px 14px; font-size: 0.9rem; font-family: inherit;
+    border: 1.5px solid var(--border); border-radius: var(--r);
+    background: var(--bg2); color: var(--ink);
+    transition: border-color .12s;
+  }
+  .form-row input:focus, .form-row textarea:focus, .form-row select:focus {
+    outline: none; border-color: var(--accent);
+  }
+  .form-row textarea { resize: vertical; min-height: 100px; }
+  .form-submit {
+    background: var(--accent); color: #fff;
+    padding: 12px; border: none; border-radius: var(--r);
+    font-weight: 600; font-size: 0.95rem; cursor: pointer;
+    transition: background .15s;
+  }
+  .form-submit:hover { background: var(--accent2); }
+
+  /* ── Footer ── */
+  footer {
+    background: var(--ink); color: #94a3b8;
+    padding: 40px 5vw;
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 16px;
+    font-size: 0.85rem;
+  }
+  .footer-logo { font-weight: 700; font-size: 1rem; color: #fff; }
+  .footer-logo span { color: #60a5fa; }
+  footer a { color: #94a3b8; }
+  footer a:hover { color: #fff; }
+
+  @media (max-width: 680px) {
+    .nav-links { display: none; }
+    .about-grid { grid-template-columns: 1fr; }
+    .about-stats { grid-template-columns: 1fr 1fr; }
+    footer { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── Navigation ── -->
+<nav>
+  <div class="nav-logo">Lex<span>Sec</span> Advisory</div>
+  <div class="nav-links">
+    <a href="#services">Services</a>
+    <a href="#products">Products</a>
+    <a href="#about">About</a>
+    <a href="#contact">Contact</a>
+    <a href="#contact" class="nav-cta">Get in touch</a>
+  </div>
+</nav>
+
+<!-- ── Hero ── -->
+<header class="hero">
+  <div class="hero-tag">GRC · Cybersecurity · Compliance</div>
+  <h1>Governance, Risk & Compliance <em>done right</em></h1>
+  <p>LexSec Advisory helps organisations build robust compliance programmes, manage risk confidently, and achieve certifications faster — with expert guidance and purpose-built tools.</p>
+  <div class="hero-actions">
+    <a href="#contact" class="btn-primary">Book a consultation</a>
+    <a href="#products" class="btn-ghost">Explore our products</a>
+  </div>
+</header>
+
+<!-- ── Services ── -->
+<section class="services" id="services">
+  <div class="section-label">What we do</div>
+  <div class="section-title">End-to-end GRC advisory services</div>
+  <p class="section-sub">From readiness assessments to certification support — we work alongside your team at every stage of your compliance journey.</p>
+
+  <div class="services-grid">
+    <div class="service-card">
+      <div class="service-icon">🛡️</div>
+      <h3>Compliance Readiness</h3>
+      <p>Gap assessments and structured roadmaps for SOC 2, ISO 27001, HIPAA, GDPR, PCI DSS, and more — tailored to your organisation's size and risk profile.</p>
+    </div>
+    <div class="service-card">
+      <div class="service-icon">⚖️</div>
+      <h3>Risk Management</h3>
+      <p>Enterprise risk register design, likelihood/impact modelling, treatment planning, and ongoing monitoring programmes aligned to ISO 31000 and COSO.</p>
+    </div>
+    <div class="service-card">
+      <div class="service-icon">📋</div>
+      <h3>Policy & Procedure</h3>
+      <p>Framework-aligned policy libraries, acceptable use policies, incident response plans, and vendor management programmes — ready for auditor scrutiny.</p>
+    </div>
+    <div class="service-card">
+      <div class="service-icon">🔍</div>
+      <h3>Audit Support</h3>
+      <p>Evidence collection, auditor liaison, control testing, and remediation tracking to get you through your Type I or Type II audit with confidence.</p>
+    </div>
+    <div class="service-card">
+      <div class="service-icon">🤖</div>
+      <h3>AI Governance</h3>
+      <p>ISO 42001 readiness, AI risk assessments, model governance frameworks, and responsible AI policy development for AI-enabled organisations.</p>
+    </div>
+    <div class="service-card">
+      <div class="service-icon">🏢</div>
+      <h3>vCISO Services</h3>
+      <p>Fractional CISO support for growing companies — strategic security leadership, board reporting, and programme ownership without the full-time cost.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── Products ── -->
+<section id="products">
+  <div class="section-label">Our products</div>
+  <div class="section-title">Purpose-built GRC platforms</div>
+  <p class="section-sub">Software we built because we couldn't find tools good enough for our own client work.</p>
+
+  <div class="products-grid">
+    <a class="product-card" href="https://accaveverilink.com">
+      <div class="product-badge badge-blue">GRC Platform</div>
+      <h3>Accave Verilink</h3>
+      <p>AI-powered multiuser GRC platform covering 11 frameworks — SOC 2, ISO 27001, HIPAA, GDPR, PCI DSS and more. Evidence management, risk register, vendor tracking, and audit log built in.</p>
+      <span class="product-link">Explore Accave Verilink →</span>
+    </a>
+    <a class="product-card" href="https://shepherdgrc.com">
+      <div class="product-badge badge-green">Coming Soon</div>
+      <h3>Shepherd GRC</h3>
+      <p>Continuous compliance monitoring and control automation for cloud-native organisations. Connect your AWS, Azure, or GCP account and get real-time posture scoring.</p>
+      <span class="product-link">Join the waitlist →</span>
+    </a>
+    <a class="product-card" href="https://primumgrc.com">
+      <div class="product-badge badge-purple">Coming Soon</div>
+      <h3>Primum GRC</h3>
+      <p>Board-level risk intelligence and reporting. Executive dashboards, risk appetite statements, and board-ready PDF reports — connecting your GRC programme to the boardroom.</p>
+      <span class="product-link">Join the waitlist →</span>
+    </a>
+  </div>
+</section>
+
+<!-- ── About ── -->
+<section class="about" id="about">
+  <div class="section-label">About us</div>
+  <div class="section-title">Practitioners, not just consultants</div>
+  <div class="about-grid">
+    <div>
+      <p class="section-sub">LexSec Advisory was founded by compliance practitioners who spent years inside regulated industries. We built the tools we wished existed and the advisory practice to go with them.</p>
+      <p class="section-sub" style="margin-top:16px;">We work with startups seeking their first SOC 2 report, scale-ups preparing for enterprise procurement, and established organisations managing multi-framework compliance programmes.</p>
+    </div>
+    <div class="about-stats">
+      <div class="stat-card">
+        <div class="stat-num">11</div>
+        <div class="stat-label">Frameworks supported</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">3</div>
+        <div class="stat-label">GRC products</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">AI</div>
+        <div class="stat-label">Powered assessments</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">100%</div>
+        <div class="stat-label">Audit-ready output</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Contact ── -->
+<section class="contact" id="contact">
+  <div class="section-label">Get in touch</div>
+  <div class="section-title">Let's talk about your compliance goals</div>
+  <p class="section-sub">Whether you're starting from scratch or preparing for a specific audit, we'd love to hear where you are and where you want to get to.</p>
+
+  <div class="contact-box">
+    <div class="form-row">
+      <label for="name">Your name</label>
+      <input type="text" id="name" placeholder="Jane Smith">
+    </div>
+    <div class="form-row">
+      <label for="email">Work email</label>
+      <input type="email" id="email" placeholder="jane@company.com">
+    </div>
+    <div class="form-row">
+      <label for="service">I'm interested in</label>
+      <select id="service">
+        <option value="">Select a service…</option>
+        <option>Compliance Readiness Assessment</option>
+        <option>SOC 2 preparation</option>
+        <option>ISO 27001 certification</option>
+        <option>GDPR / HIPAA programme</option>
+        <option>AI Governance (ISO 42001)</option>
+        <option>vCISO services</option>
+        <option>Accave Verilink demo</option>
+        <option>Other</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label for="message">Message</label>
+      <textarea id="message" placeholder="Tell us a bit about your organisation and what you're trying to achieve…"></textarea>
+    </div>
+    <button class="form-submit" onclick="handleSubmit()">Send message</button>
+  </div>
+</section>
+
+<!-- ── Footer ── -->
+<footer>
+  <div class="footer-logo">Lex<span>Sec</span> Advisory</div>
+  <div>GRC · Cybersecurity · Compliance</div>
+  <div>
+    <a href="mailto:hello@lexsecadvisory.com">hello@lexsecadvisory.com</a>
+  </div>
+  <div>© 2026 LexSec Advisory. All rights reserved.</div>
+</footer>
+
+<script>
+function handleSubmit() {
+  const name    = document.getElementById('name').value.trim();
+  const email   = document.getElementById('email').value.trim();
+  const service = document.getElementById('service').value;
+  const message = document.getElementById('message').value.trim();
+  if (!name || !email || !message) {
+    alert('Please fill in your name, email, and message.');
+    return;
+  }
+  // Replace this with your preferred form backend (Formspree, EmailJS, etc.)
+  const mailto = `mailto:hello@lexsecadvisory.com`
+    + `?subject=${encodeURIComponent('Enquiry: ' + (service || 'General'))}`
+    + `&body=${encodeURIComponent(`Name: ${name}\nEmail: ${email}\n\n${message}`)}`;
+  window.location.href = mailto;
+}
+</script>
+</body>
+</html>
