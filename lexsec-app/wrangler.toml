@@ -3,7 +3,7 @@ compatibility_date = "2026-05-26"
 main = "src/index.ts"
 
 routes = [
-  { pattern = "app.lexsecadvisory.com/*", custom_domain = true }
+  { pattern = "app.lexsecadvisory.com", custom_domain = true }
 ]
 
 [[d1_databases]]
