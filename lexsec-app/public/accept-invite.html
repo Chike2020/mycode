@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LexSec — Accept Invitation</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--navy:#0E1F3D;--teal:#0B7A63;--teal2:#0D9478;--gold:#C8A96E;--cream:#F7F3EE;--text:#1A1A2E;--muted:#6B6B7A;--white:#fff}
+body{font-family:'DM Sans',sans-serif;background:var(--navy);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;position:relative;overflow:hidden}
+body::before{content:'';position:absolute;top:-150px;right:-150px;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(11,122,99,.15) 0%,transparent 70%);pointer-events:none}
+.card{background:var(--white);width:100%;max-width:480px;padding:2.5rem;position:relative;z-index:1}
+.logo{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--gold);text-align:center;margin-bottom:.25rem;letter-spacing:.04em}
+.logo span{color:rgba(255,255,255,.4)}
+.logo-wrap{background:var(--navy);margin:-2.5rem -2.5rem 2rem;padding:1.75rem;text-align:center}
+.eyebrow{font-family:'DM Mono',monospace;font-size:.65rem;color:rgba(255,255,255,.35);letter-spacing:.1em;text-transform:uppercase;margin-top:.25rem}
+h1{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;color:var(--navy);margin-bottom:.5rem;line-height:1.2}
+.sub{font-size:.88rem;color:var(--muted);line-height:1.7;margin-bottom:2rem}
+.org-name{color:var(--navy);font-weight:600}
+.btn{display:block;width:100%;padding:.9rem;background:var(--teal);color:var(--white);font-family:'DM Sans',sans-serif;font-size:.84rem;font-weight:500;letter-spacing:.06em;text-transform:uppercase;border:none;cursor:pointer;transition:background .2s;margin-bottom:.75rem;text-decoration:none;text-align:center}
+.btn:hover{background:var(--teal2)}
+.btn-outline{background:transparent;color:var(--teal);border:1px solid var(--teal)}
+.btn-outline:hover{background:var(--teal);color:var(--white)}
+.error{background:rgba(180,30,30,.08);border:1px solid rgba(180,30,30,.2);color:#a02020;font-size:.82rem;padding:.65rem .9rem;margin-bottom:1rem;display:none}
+.error.show{display:block}
+.success{text-align:center;padding:1rem 0}
+.success h2{font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--navy);margin-bottom:.5rem}
+.success p{font-size:.88rem;color:var(--muted);margin-bottom:1.5rem}
+.spinner{display:inline-block;width:20px;height:20px;border:2px solid rgba(14,31,61,.15);border-top-color:var(--teal);border-radius:50%;animation:spin .6s linear infinite;margin:2rem auto;display:block}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo-wrap">
+    <div class="logo">LEXSEC<span> | Advisory</span></div>
+    <div class="eyebrow">GRC Compliance Platform</div>
+  </div>
+
+  <div id="state-loading"><div class="spinner"></div></div>
+
+  <div id="state-invite" style="display:none">
+    <h1>You've been invited</h1>
+    <p class="sub">You've been invited to join <span class="org-name" id="inv-org">—</span> on LexSec Advisory.<br>Accept the invitation to access the GRC platform.</p>
+    <div class="error" id="inv-err"></div>
+    <button class="btn" id="btn-accept" onclick="accept()">Accept &amp; Join Organization</button>
+    <a href="/login.html" class="btn btn-outline" style="display:block">Cancel</a>
+  </div>
+
+  <div id="state-login" style="display:none">
+    <h1>Sign in to accept</h1>
+    <p class="sub">You need to be signed in to accept this invitation. Create an account or sign in first — your invitation will be waiting.</p>
+    <a class="btn" id="btn-login-reg" href="">Create account &amp; accept</a>
+    <a class="btn btn-outline" id="btn-login-in" href="">Sign in instead</a>
+  </div>
+
+  <div id="state-success" style="display:none">
+    <div class="success">
+      <div style="font-size:2.5rem;margin-bottom:.75rem">✓</div>
+      <h2>You're in!</h2>
+      <p>You've joined <strong id="success-org"></strong>. Redirecting to the dashboard…</p>
+    </div>
+  </div>
+
+  <div id="state-error" style="display:none">
+    <h1>Invalid invitation</h1>
+    <p class="sub">This invitation link is invalid, has already been used, or has expired. Contact the person who sent it for a new one.</p>
+    <a href="/login.html" class="btn">Go to sign in</a>
+  </div>
+</div>
+
+<script>
+const token   = new URLSearchParams(location.search).get('token')
+const inviteUrl = location.href
+
+function show(id) {
+  ['loading','invite','login','success','error'].forEach(s => {
+    document.getElementById('state-'+s).style.display = s === id ? '' : 'none'
+  })
+}
+
+async function init() {
+  if (!token) { show('error'); return }
+
+  // Check if logged in
+  const me = await fetch('/api/auth/me', { credentials: 'include' })
+  if (!me.ok) {
+    // Not logged in — send them to register with redirect back
+    const returnUrl = encodeURIComponent(location.href)
+    document.getElementById('btn-login-reg').href = `/login.html?tab=register&redirect=${returnUrl}`
+    document.getElementById('btn-login-in').href  = `/login.html?redirect=${returnUrl}`
+    show('login')
+    return
+  }
+
+  // Logged in — show accept screen
+  // We don't have the org name without calling the invite endpoint, so show generic text
+  document.getElementById('inv-org').textContent = 'your organization'
+  show('invite')
+}
+
+async function accept() {
+  const btn = document.getElementById('btn-accept')
+  btn.disabled = true; btn.textContent = 'Joining…'
+  const errEl = document.getElementById('inv-err')
+  errEl.classList.remove('show')
+
+  const res  = await fetch('/api/orgs/accept-invite', {
+    method: 'POST', credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token })
+  })
+  const data = await res.json()
+
+  if (!res.ok) {
+    errEl.textContent = data.error || 'Failed to accept invitation'
+    errEl.classList.add('show')
+    btn.disabled = false; btn.textContent = 'Accept & Join Organization'
+    return
+  }
+
+  show('success')
+  document.getElementById('success-org').textContent = document.getElementById('inv-org').textContent
+  setTimeout(() => { location.href = '/app.html' }, 2000)
+}
+
+init()
+</script>
+</body>
+</html>

@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { zValidator } from '@hono/zod-validator'
 import { z } from 'zod'
 import { generateId, generateToken } from '../lib/crypto'
+import { sendInviteEmail } from '../lib/email'
 import { requireAuth } from '../middleware/auth'
 import type { AppType, OrgMember } from '../types'
 
@@ -85,8 +86,22 @@ orgRoutes.post(
       'INSERT INTO invitations (id, org_id, email, role, token, invited_by, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
     ).bind(generateId(), id, email.toLowerCase(), role, token, actorId, expiresAt).run()
 
-    const inviteUrl = `${c.env.FRONTEND_URL}/accept-invite?token=${token}`
-    // TODO: send email via Resend/SendGrid — returning URL here for now
+    const inviteUrl = `${c.env.FRONTEND_URL}/accept-invite.html?token=${token}`
+
+    // Fetch inviter name + org name for the email
+    const [inviter, org] = await Promise.all([
+      c.env.DB.prepare('SELECT full_name FROM users WHERE id = ?').bind(actorId).first<{ full_name: string }>(),
+      c.env.DB.prepare('SELECT name FROM organizations WHERE id = ?').bind(id).first<{ name: string }>(),
+    ])
+
+    // Fire-and-forget — don't fail the request if email delivery fails
+    if (c.env.RESEND_API_KEY) {
+      c.executionCtx.waitUntil(
+        sendInviteEmail(c.env.RESEND_API_KEY, email, inviter?.full_name ?? 'Someone', org?.name ?? 'your organization', inviteUrl)
+          .catch(err => console.error('[invite email]', err))
+      )
+    }
+
     return c.json({ invite_url: inviteUrl }, 201)
   }
 )

@@ -36,6 +36,9 @@ app.route('/api/orgs',    orgRoutes)
 app.route('/api/billing', billingRoutes)
 app.route('/webhooks',    webhookRoutes)
 
+// Serve frontend assets for all non-API routes
+app.all('*', (c) => c.env.ASSETS.fetch(c.req.raw))
+
 // 404 / error handlers
 app.notFound((c) => c.json({ error: 'Not found' }, 404))
 app.onError((err, c) => {

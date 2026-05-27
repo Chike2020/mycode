@@ -1,11 +1,13 @@
 export type Env = {
   DB: D1Database
   BUCKET: R2Bucket
+  ASSETS: Fetcher
   JWT_SECRET: string
   STRIPE_SECRET_KEY: string
   STRIPE_WEBHOOK_SECRET: string
   STRIPE_PRICE_PRO_MONTHLY: string
   STRIPE_PRICE_ENTERPRISE_MONTHLY: string
+  RESEND_API_KEY: string
   FRONTEND_URL: string
 }
 

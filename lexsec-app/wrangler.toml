@@ -15,6 +15,9 @@ database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
 binding = "BUCKET"
 bucket_name = "lexsec-files"
 
+[assets]
+directory = "./public"
+
 [vars]
 FRONTEND_URL = "https://app.lexsecadvisory.com"
 
@@ -24,3 +27,4 @@ FRONTEND_URL = "https://app.lexsecadvisory.com"
 # STRIPE_WEBHOOK_SECRET
 # STRIPE_PRICE_PRO_MONTHLY
 # STRIPE_PRICE_ENTERPRISE_MONTHLY
+# RESEND_API_KEY
