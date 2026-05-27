@@ -1,0 +1,25 @@
+{
+  "name": "lexsec-app",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:create": "wrangler d1 create lexsec-db",
+    "db:migrate": "wrangler d1 migrations apply lexsec-db",
+    "db:migrate:local": "wrangler d1 migrations apply lexsec-db --local",
+    "r2:create": "wrangler r2 bucket create lexsec-files",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@hono/zod-validator": "^0.4.3",
+    "hono": "^4.6.0",
+    "stripe": "^16.0.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260527.1",
+    "typescript": "^5.6.0",
+    "wrangler": "^3.95.0"
+  }
+}
