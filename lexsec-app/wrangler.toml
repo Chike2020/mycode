@@ -9,7 +9,7 @@ routes = [
 [[d1_databases]]
 binding = "DB"
 database_name = "lexsec-db"
-database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+database_id = "0950e483-1c48-4872-b73f-305e7b083872"
 
 [[r2_buckets]]
 binding = "BUCKET"
