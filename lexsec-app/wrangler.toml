@@ -1,0 +1,30 @@
+name = "lexsec-app"
+compatibility_date = "2026-05-26"
+main = "src/index.ts"
+
+routes = [
+  { pattern = "app.lexsecadvisory.com/*", custom_domain = true }
+]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "lexsec-db"
+database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "lexsec-files"
+
+[assets]
+directory = "./public"
+
+[vars]
+FRONTEND_URL = "https://app.lexsecadvisory.com"
+
+# Secrets (set via: wrangler secret put SECRET_NAME)
+# JWT_SECRET
+# STRIPE_SECRET_KEY
+# STRIPE_WEBHOOK_SECRET
+# STRIPE_PRICE_PRO_MONTHLY
+# STRIPE_PRICE_ENTERPRISE_MONTHLY
+# RESEND_API_KEY

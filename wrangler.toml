@@ -1,5 +1,9 @@
-name = "lexsec-advisory"
+name = "mycode"
 compatibility_date = "2026-05-26"
 
 [assets]
 directory = "./lexsec-site"
+
+routes = [
+  { pattern = "lexsecadvisory.com/*", custom_domain = true }
+]

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LexSec — Sign in</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0E1F3D;--teal:#0B7A63;--teal2:#0D9478;
+  --gold:#C8A96E;--gold2:#E2C68A;
+  --cream:#F7F3EE;--text:#1A1A2E;--muted:#6B6B7A;
+  --white:#FFFFFF;--line:rgba(200,169,110,.25);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);min-height:100vh;display:flex}
+.left{
+  width:420px;flex-shrink:0;background:var(--navy);
+  padding:4rem 3rem;display:flex;flex-direction:column;justify-content:center;
+  position:relative;overflow:hidden;
+}
+.left::before{
+  content:'';position:absolute;top:-100px;right:-100px;
+  width:400px;height:400px;border-radius:50%;
+  background:radial-gradient(circle,rgba(11,122,99,.18) 0%,transparent 70%);
+  pointer-events:none;
+}
+.brand-logo{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;color:var(--gold);letter-spacing:.04em;margin-bottom:.3rem}
+.brand-logo span{color:rgba(255,255,255,.5)}
+.brand-mono{font-family:'DM Mono',monospace;font-size:.68rem;color:rgba(255,255,255,.35);letter-spacing:.1em;text-transform:uppercase;margin-bottom:3rem}
+.brand-headline{font-family:'Playfair Display',serif;font-size:2.25rem;font-weight:700;color:var(--white);line-height:1.15;margin-bottom:1.25rem}
+.brand-headline .g{color:var(--gold)}
+.brand-desc{font-size:.88rem;line-height:1.8;color:rgba(255,255,255,.6);margin-bottom:2.5rem}
+.pills{display:flex;flex-wrap:wrap;gap:.45rem}
+.pill{font-family:'DM Mono',monospace;font-size:.63rem;letter-spacing:.07em;padding:.28rem .65rem;border:1px solid rgba(200,169,110,.35);color:var(--gold2);background:rgba(200,169,110,.06)}
+.right{flex:1;display:flex;align-items:center;justify-content:center;padding:3rem 2rem}
+.card{width:100%;max-width:420px}
+.tabs{display:flex;border-bottom:1px solid rgba(14,31,61,.15);margin-bottom:2.25rem}
+.tab{padding:.7rem 1.4rem;font-size:.84rem;font-weight:500;color:var(--muted);cursor:pointer;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;background:none;transition:color .2s,border-color .2s}
+.tab.active{color:var(--navy);border-bottom-color:var(--teal)}
+h2{font-family:'Playfair Display',serif;font-size:1.7rem;font-weight:700;color:var(--navy);margin-bottom:.35rem}
+.sub{font-size:.86rem;color:var(--muted);margin-bottom:1.75rem}
+label{display:block;font-size:.78rem;font-weight:500;color:var(--text);margin-bottom:.35rem;letter-spacing:.03em}
+input{display:block;width:100%;padding:.72rem 1rem;border:1px solid rgba(14,31,61,.2);background:var(--white);color:var(--text);font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none;transition:border-color .2s;margin-bottom:1.15rem}
+input:focus{border-color:var(--teal)}
+.btn{display:block;width:100%;padding:.88rem;background:var(--teal);color:var(--white);font-family:'DM Sans',sans-serif;font-size:.83rem;font-weight:500;letter-spacing:.06em;text-transform:uppercase;border:none;cursor:pointer;transition:background .2s}
+.btn:hover:not(:disabled){background:var(--teal2)}
+.btn:disabled{opacity:.6;cursor:not-allowed}
+.error{background:rgba(180,30,30,.07);border:1px solid rgba(180,30,30,.25);color:#a02020;font-size:.82rem;padding:.65rem .9rem;margin-bottom:1.15rem;display:none}
+.error.show{display:block}
+@media(max-width:768px){body{flex-direction:column}.left{width:100%;padding:2.5rem 1.5rem}.brand-headline{font-size:1.8rem}}
+</style>
+</head>
+<body>
+
+<div class="left">
+  <div class="brand-logo">LEXSEC<span> | Advisory</span></div>
+  <div class="brand-mono">GRC Compliance Platform</div>
+  <h1 class="brand-headline">Where Law<br>Meets <span class="g">Security.</span></h1>
+  <p class="brand-desc">Integrated GRC, cybersecurity, and legal compliance management — built for organizations that can't afford to separate the two.</p>
+  <div class="pills">
+    <span class="pill">CISSP</span><span class="pill">JD — NY Bar</span><span class="pill">PMP</span>
+    <span class="pill">SOC 2</span><span class="pill">HIPAA</span><span class="pill">ISO 27001</span>
+  </div>
+</div>
+
+<div class="right">
+  <div class="card">
+    <div class="tabs">
+      <button class="tab active" onclick="show('login')">Sign in</button>
+      <button class="tab" onclick="show('register')">Create account</button>
+    </div>
+
+    <div id="pane-login">
+      <h2>Welcome back</h2>
+      <p class="sub">Sign in to your LexSec account.</p>
+      <div class="error" id="err-login"></div>
+      <form onsubmit="login(event)">
+        <label>Email</label>
+        <input type="email" id="l-email" placeholder="you@company.com" required>
+        <label>Password</label>
+        <input type="password" id="l-pass" placeholder="••••••••" required>
+        <button class="btn" id="btn-login">Sign in</button>
+      </form>
+    </div>
+
+    <div id="pane-register" style="display:none">
+      <h2>Get started</h2>
+      <p class="sub">Create your account and organization.</p>
+      <div class="error" id="err-reg"></div>
+      <form onsubmit="register(event)">
+        <label>Full name</label>
+        <input type="text" id="r-name" placeholder="Gideon Okechukwu" required>
+        <label>Work email</label>
+        <input type="email" id="r-email" placeholder="you@company.com" required>
+        <label>Password <span style="color:var(--muted);font-weight:300">(8+ chars)</span></label>
+        <input type="password" id="r-pass" placeholder="••••••••" minlength="8" required>
+        <label>Organization name</label>
+        <input type="text" id="r-org" placeholder="Acme Corp" required>
+        <button class="btn" id="btn-reg">Create account</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+const tabs = document.querySelectorAll('.tab')
+
+function show(pane) {
+  tabs[0].classList.toggle('active', pane === 'login')
+  tabs[1].classList.toggle('active', pane === 'register')
+  document.getElementById('pane-login').style.display    = pane === 'login'    ? '' : 'none'
+  document.getElementById('pane-register').style.display = pane === 'register' ? '' : 'none'
+}
+
+function err(id, msg) {
+  const el = document.getElementById(id)
+  el.textContent = msg; el.classList.add('show')
+}
+function clearErr(id) { document.getElementById(id).classList.remove('show') }
+
+function setLoading(btnId, loading, label) {
+  const btn = document.getElementById(btnId)
+  btn.disabled = loading; btn.textContent = loading ? label + '…' : label
+}
+
+async function login(e) {
+  e.preventDefault(); clearErr('err-login')
+  setLoading('btn-login', true, 'Sign in')
+  try {
+    const res  = await fetch('/api/auth/login', {
+      method:'POST', credentials:'include',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ email: document.getElementById('l-email').value, password: document.getElementById('l-pass').value })
+    })
+    const data = await res.json()
+    if (!res.ok) { err('err-login', data.error || 'Login failed'); return }
+    location.href = new URLSearchParams(location.search).get('redirect') || '/app.html'
+  } finally { setLoading('btn-login', false, 'Sign in') }
+}
+
+async function register(e) {
+  e.preventDefault(); clearErr('err-reg')
+  setLoading('btn-reg', true, 'Create account')
+  try {
+    const res  = await fetch('/api/auth/register', {
+      method:'POST', credentials:'include',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        full_name: document.getElementById('r-name').value,
+        email:     document.getElementById('r-email').value,
+        password:  document.getElementById('r-pass').value,
+        org_name:  document.getElementById('r-org').value,
+      })
+    })
+    const data = await res.json()
+    if (!res.ok) { err('err-reg', data.error || 'Registration failed'); return }
+    location.href = '/app.html'
+  } finally { setLoading('btn-reg', false, 'Create account') }
+}
+
+// Redirect if already logged in
+fetch('/api/auth/me', { credentials:'include' }).then(r => { if (r.ok) location.href = '/app.html' })
+
+// Pre-fill tab from URL (?tab=register)
+if (new URLSearchParams(location.search).get('tab') === 'register') show('register')
+</script>
+</body>
+</html>
