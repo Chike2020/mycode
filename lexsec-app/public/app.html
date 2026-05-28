@@ -142,6 +142,30 @@ tr:hover td{background:rgba(11,122,99,.03)}
 .plan-features li{font-size:.82rem;color:var(--muted);padding:.3rem 0;display:flex;align-items:center;gap:.5rem}
 .plan-features li::before{content:'✓';color:var(--teal);font-weight:700;flex-shrink:0}
 
+/* ── SCORE ── */
+.score-wrap{display:grid;grid-template-columns:280px 1fr;gap:1.5rem;margin-bottom:2rem;align-items:start}
+.score-dial{background:var(--white);border:1px solid rgba(14,31,61,.08);padding:2rem;text-align:center}
+.score-circle{width:160px;height:160px;border-radius:50%;margin:0 auto 1rem;display:flex;flex-direction:column;align-items:center;justify-content:center;border:8px solid var(--cream);position:relative}
+.score-num{font-family:'Playfair Display',serif;font-size:3rem;font-weight:700;line-height:1}
+.score-grade{font-family:'DM Mono',monospace;font-size:.85rem;letter-spacing:.1em;margin-top:.2rem}
+.score-label{font-size:.78rem;color:var(--muted);margin-top:.5rem}
+.score-updated{font-family:'DM Mono',monospace;font-size:.62rem;color:rgba(14,31,61,.3);margin-top:.25rem}
+.score-bars{background:var(--white);border:1px solid rgba(14,31,61,.08);padding:1.5rem}
+.score-bar-row{margin-bottom:1.25rem}
+.score-bar-row:last-child{margin-bottom:0}
+.score-bar-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.4rem}
+.score-bar-name{font-size:.82rem;font-weight:500;color:var(--text)}
+.score-bar-meta{font-size:.72rem;color:var(--muted)}
+.score-bar-track{height:8px;background:rgba(14,31,61,.07);border-radius:4px;overflow:hidden}
+.score-bar-fill{height:100%;border-radius:4px;transition:width .6s ease}
+.score-bar-label{font-size:.72rem;color:var(--muted);margin-top:.3rem}
+.score-a-plus{border-color:#0B7A63;color:#0B7A63}
+.score-a    {border-color:#0B7A63;color:#0B7A63}
+.score-b    {border-color:#4a9e6b;color:#4a9e6b}
+.score-c    {border-color:#C8A96E;color:#8a6820}
+.score-d    {border-color:#e08030;color:#c06020}
+.score-f    {border-color:#a02020;color:#a02020}
+
 /* ── EMPTY + COMING SOON ── */
 .empty{text-align:center;padding:4rem 2rem;color:var(--muted)}
 .empty-icon{font-size:2.5rem;margin-bottom:1rem;opacity:.3}
@@ -288,14 +312,82 @@ const SECTIONS = {
 
   // DASHBOARD
   async dashboard() {
-    const org = S.currentOrg
+    const org  = S.currentOrg
     const plan = org?.plan || 'free'
+
+    // Load score + counts in parallel
+    const [scoreRes, evRes, riskRes, vendorRes] = await Promise.all([
+      get('/api/score'),
+      get('/api/evidence'),
+      get('/api/risks'),
+      get('/api/vendors'),
+    ])
+    const sc      = scoreRes.ok  ? await scoreRes.json()  : null
+    const ev      = evRes.ok     ? await evRes.json()     : {}
+    const risks   = riskRes.ok   ? await riskRes.json()   : []
+    const vendors = vendorRes.ok ? await vendorRes.json() : []
+
+    const evCount    = Object.values(ev).reduce((s, a) => s + a.length, 0)
+    const openRisks  = risks.filter(r => r.status === 'open' || !r.status).length
+    const hiVendors  = vendors.filter(v => v.riskLevel === 'high' || v.riskLevel === 'critical').length
+
+    const barColor = s => s >= 80 ? '#0B7A63' : s >= 60 ? '#C8A96E' : '#a02020'
+    const gradeClass = g => ({ 'A+':'a-plus', A:'a', B:'b', C:'c', D:'d', F:'f' })[g] || 'f'
+
+    const scoreHtml = sc ? `
+      <div class="score-wrap">
+        <div class="score-dial">
+          <div class="score-circle score-${gradeClass(sc.grade)}">
+            <div class="score-num">${sc.overall}</div>
+            <div class="score-grade">${sc.grade}</div>
+          </div>
+          <div style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:var(--navy);margin-bottom:.25rem">Audit Readiness Score</div>
+          <div class="score-label">Based on evidence freshness,<br>open risks, vendors &amp; calendar</div>
+          <div class="score-updated">Updated just now</div>
+        </div>
+        <div class="score-bars">
+          <div style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:var(--navy);margin-bottom:1.25rem">Score Breakdown</div>
+          ${Object.entries(sc.components).map(([key, comp]) => `
+          <div class="score-bar-row">
+            <div class="score-bar-header">
+              <span class="score-bar-name">${key.charAt(0).toUpperCase()+key.slice(1)} <span style="font-size:.7rem;color:var(--muted);font-weight:400">(${comp.weight}%)</span></span>
+              <span class="score-bar-meta">${comp.score}/100</span>
+            </div>
+            <div class="score-bar-track">
+              <div class="score-bar-fill" style="width:${comp.score}%;background:${barColor(comp.score)}"></div>
+            </div>
+            <div class="score-bar-label">${comp.label}</div>
+          </div>`).join('')}
+        </div>
+      </div>` : ''
+
     setContent(`
+      ${scoreHtml}
       <div class="stat-row">
-        <div class="stat-card"><div class="stat-num">${S.orgs.length}</div><div class="stat-label">Organization${S.orgs.length !== 1 ? 's' : ''}</div><div class="stat-badge">${S.orgs.map(o=>o.name).join(', ')}</div></div>
-        <div class="stat-card"><div class="stat-num">—</div><div class="stat-label">Open Risks</div><div class="stat-badge" style="background:rgba(200,169,110,.1);color:#8a6820">GRC required</div></div>
-        <div class="stat-card"><div class="stat-num">—</div><div class="stat-label">Evidence Items</div><div class="stat-badge" style="background:rgba(200,169,110,.1);color:#8a6820">GRC required</div></div>
-        <div class="stat-card"><div class="stat-num">—</div><div class="stat-label">Vendors Tracked</div><div class="stat-badge" style="background:rgba(200,169,110,.1);color:#8a6820">GRC required</div></div>
+        <div class="stat-card" onclick="nav('evidence')" style="cursor:pointer">
+          <div class="stat-num">${evCount}</div>
+          <div class="stat-label">Evidence Files</div>
+          <div class="stat-badge">Click to manage</div>
+        </div>
+        <div class="stat-card" onclick="nav('risks')" style="cursor:pointer">
+          <div class="stat-num">${openRisks}</div>
+          <div class="stat-label">Open Risks</div>
+          <div class="stat-badge" style="${openRisks > 0 ? 'background:rgba(180,30,30,.1);color:#a02020' : ''}">
+            ${openRisks > 0 ? 'Needs attention' : 'All clear'}
+          </div>
+        </div>
+        <div class="stat-card" onclick="nav('vendors')" style="cursor:pointer">
+          <div class="stat-num">${vendors.length}</div>
+          <div class="stat-label">Vendors Tracked</div>
+          <div class="stat-badge" style="${hiVendors > 0 ? 'background:rgba(180,30,30,.1);color:#a02020' : ''}">
+            ${hiVendors > 0 ? hiVendors + ' high risk' : 'Risk levels OK'}
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">${S.orgs.length}</div>
+          <div class="stat-label">Organization${S.orgs.length !== 1 ? 's' : ''}</div>
+          <div class="stat-badge">${org?.name || '—'}</div>
+        </div>
       </div>
       <div class="card">
         <div class="card-header"><div class="card-title">Organization</div></div>
