@@ -31,21 +31,21 @@ function grade(score: number): string {
 }
 
 function evidenceScore(rows: { uploaded_at: string }[], now: number) {
-  if (!rows.length) return { score: 0, label: 'No evidence uploaded', count: 0 }
-  const avg = rows.reduce((s, r) => s + freshnessFactor(r.uploaded_at, now), 0) / rows.length
+  if (!rows.length) return { score: 0, label: 'Upload evidence files to start building your score', count: 0, stale: 0 }
+  const avg   = rows.reduce((s, r) => s + freshnessFactor(r.uploaded_at, now), 0) / rows.length
   const score = clamp(avg * 100)
-  const stale  = rows.filter(r => freshnessFactor(r.uploaded_at, now) < 0.7).length
+  const stale = rows.filter(r => freshnessFactor(r.uploaded_at, now) < 0.7).length
   return {
     score,
     count: rows.length,
     stale,
-    label: stale > 0 ? `${stale} file${stale > 1 ? 's' : ''} older than 90 days` : 'All evidence is fresh',
+    label: stale > 0 ? `${stale} file${stale > 1 ? 's' : ''} older than 90 days — re-collect to refresh` : 'All evidence is fresh',
   }
 }
 
 function riskScore(risks: Record<string, unknown>[]) {
-  if (!risks.length) return { score: 60, label: 'No risks logged — register known risks', count: 0, open: 0 }
-  const open = risks.filter(r => r.status === 'open' || !r.status)
+  if (!risks.length) return { score: 0, label: 'Log your known risks to assess your risk posture', count: 0, open: 0 }
+  const open    = risks.filter(r => r.status === 'open' || !r.status)
   const penalty = open.reduce((p, r) => {
     const lvl = Number(r.likelihood ?? 1) * Number(r.impact ?? 1)
     return p + (lvl >= 20 ? 20 : lvl >= 12 ? 10 : lvl >= 6 ? 5 : 2)
@@ -54,30 +54,30 @@ function riskScore(risks: Record<string, unknown>[]) {
   return {
     score,
     count: risks.length,
-    open: open.length,
-    label: open.length === 0 ? 'All risks resolved' : `${open.length} open risk${open.length > 1 ? 's' : ''}`,
+    open:  open.length,
+    label: open.length === 0 ? 'All risks resolved' : `${open.length} open risk${open.length > 1 ? 's' : ''} — work to mitigate or accept them`,
   }
 }
 
 function vendorScore(vendors: Record<string, unknown>[]) {
-  if (!vendors.length) return { score: 60, label: 'No vendors tracked', count: 0 }
-  const active = vendors.filter(v => v.status === 'active' || !v.status)
-  const penalty = active.reduce((p, v) => {
+  if (!vendors.length) return { score: 0, label: 'Add your vendors to assess third-party risk', count: 0, highRisk: 0 }
+  const active    = vendors.filter(v => v.status === 'active' || !v.status)
+  const penalty   = active.reduce((p, v) => {
     const lvl = String(v.riskLevel || 'low')
     return p + (lvl === 'critical' ? 18 : lvl === 'high' ? 10 : lvl === 'medium' ? 4 : 0)
   }, 0)
-  const score = clamp(100 - penalty)
+  const score    = clamp(100 - penalty)
   const highRisk = active.filter(v => v.riskLevel === 'critical' || v.riskLevel === 'high').length
   return {
     score,
     count: vendors.length,
     highRisk,
-    label: highRisk > 0 ? `${highRisk} high/critical risk vendor${highRisk > 1 ? 's' : ''}` : 'Vendor risk is low',
+    label: highRisk > 0 ? `${highRisk} high/critical risk vendor${highRisk > 1 ? 's' : ''} — review or remediate` : 'Vendor risk is under control',
   }
 }
 
 function calendarScore(events: Record<string, unknown>[]) {
-  if (!events.length) return { score: 70, label: 'No compliance events scheduled', count: 0, overdue: 0 }
+  if (!events.length) return { score: 0, label: 'Schedule compliance deadlines and audits to track obligations', count: 0, overdue: 0 }
   const overdue    = events.filter(e => e.status === 'overdue').length
   const inProgress = events.filter(e => e.status === 'in progress').length
   const completed  = events.filter(e => e.status === 'completed').length
@@ -88,7 +88,7 @@ function calendarScore(events: Record<string, unknown>[]) {
     score,
     count: events.length,
     overdue,
-    label: overdue > 0 ? `${overdue} overdue event${overdue > 1 ? 's' : ''}` : 'No overdue events',
+    label: overdue > 0 ? `${overdue} overdue event${overdue > 1 ? 's' : ''} — address immediately` : 'No overdue events',
   }
 }
 
