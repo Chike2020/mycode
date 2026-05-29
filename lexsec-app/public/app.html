@@ -183,8 +183,9 @@ tr:hover td{background:rgba(11,122,99,.03)}
 .modal{background:var(--white);width:100%;max-width:460px;padding:2rem}
 .modal h3{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;color:var(--navy);margin-bottom:1.5rem}
 .modal label{display:block;font-size:.78rem;font-weight:500;color:var(--text);margin-bottom:.35rem}
-.modal input,.modal select{display:block;width:100%;padding:.7rem 1rem;border:1px solid rgba(14,31,61,.2);font-family:'DM Sans',sans-serif;font-size:.88rem;color:var(--text);outline:none;margin-bottom:1rem;background:var(--white)}
-.modal input:focus,.modal select:focus{border-color:var(--teal)}
+.modal input,.modal select,.modal textarea{display:block;width:100%;padding:.7rem 1rem;border:1px solid rgba(14,31,61,.2);font-family:'DM Sans',sans-serif;font-size:.88rem;color:var(--text);outline:none;margin-bottom:1rem;background:var(--white)}
+.modal input:focus,.modal select:focus,.modal textarea:focus{border-color:var(--teal)}
+.modal textarea{resize:vertical;min-height:80px}
 .modal-actions{display:flex;gap:.75rem;justify-content:flex-end;margin-top:.5rem}
 .error-msg{background:rgba(180,30,30,.07);border:1px solid rgba(180,30,30,.2);color:#a02020;font-size:.8rem;padding:.6rem .9rem;margin-bottom:1rem;display:none}
 .error-msg.show{display:block}
@@ -212,13 +213,18 @@ tr:hover td{background:rgba(11,122,99,.03)}
   <nav>
     <div class="nav-section">Platform</div>
     <div class="nav-item active" onclick="nav('dashboard')"><span class="nav-icon">⬡</span><span>Dashboard</span></div>
+    <div class="nav-section">Governance</div>
+    <div class="nav-item" onclick="nav('policies')"><span class="nav-icon">📄</span><span>Policies</span></div>
+    <div class="nav-item" onclick="nav('frameworks')"><span class="nav-icon">☑</span><span>Frameworks</span></div>
     <div class="nav-section">GRC</div>
     <div class="nav-item" onclick="nav('evidence')"><span class="nav-icon">📋</span><span>Evidence</span></div>
     <div class="nav-item" onclick="nav('risks')"><span class="nav-icon">⚠</span><span>Risk Register</span></div>
+    <div class="nav-item" onclick="nav('incidents')"><span class="nav-icon">🚨</span><span>Incidents</span></div>
+    <div class="nav-item" onclick="nav('assets')"><span class="nav-icon">🗂</span><span>Assets</span></div>
     <div class="nav-item" onclick="nav('vendors')"><span class="nav-icon">🔗</span><span>Vendors</span></div>
     <div class="nav-item" onclick="nav('calendar')"><span class="nav-icon">📅</span><span>Calendar</span></div>
+    <div class="nav-section">Administration</div>
     <div class="nav-item" onclick="nav('audit')"><span class="nav-icon">📝</span><span>Audit Log</span></div>
-    <div class="nav-section">Organization</div>
     <div class="nav-item" onclick="nav('team')"><span class="nav-icon">👥</span><span>Team</span></div>
     <div class="nav-item" onclick="nav('billing')"><span class="nav-icon">💳</span><span>Billing</span></div>
     <div class="nav-item" onclick="nav('settings')"><span class="nav-icon">⚙</span><span>Settings</span></div>
@@ -289,7 +295,7 @@ async function init() {
 }
 
 // ── ROUTING ────────────────────────────────────────────────────────────────
-const TITLES = { dashboard:'Dashboard', evidence:'Evidence', risks:'Risk Register', vendors:'Vendors', calendar:'Compliance Calendar', audit:'Audit Log', team:'Team', billing:'Billing', settings:'Settings' }
+const TITLES = { dashboard:'Dashboard', policies:'Policies', frameworks:'Framework Controls', evidence:'Evidence', risks:'Risk Register', incidents:'Incidents', assets:'Asset Inventory', vendors:'Vendors', calendar:'Compliance Calendar', audit:'Audit Log', team:'Team', billing:'Billing', settings:'Settings' }
 
 async function nav(section) {
   S.currentSection = section
@@ -853,6 +859,126 @@ const SECTIONS = {
   async settings() {
     setContent(`<div class="coming-soon"><h3>Organization Settings</h3><p>Manage your organization's name, branding, SSO configuration, and API keys. Coming soon.</p></div>`)
   },
+
+  // POLICIES
+  async policies() {
+    const res = await get('/api/policies')
+    _pols = res.ok ? await res.json() : []
+    const sb = s => ({'draft':`<span class="badge" style="background:rgba(14,31,61,.08);color:var(--muted)">Draft</span>`,'review':`<span class="badge" style="background:rgba(200,169,110,.15);color:#8a6820">Review</span>`,'active':`<span class="badge badge-active">Active</span>`,'retired':`<span class="badge" style="background:rgba(14,31,61,.05);color:rgba(14,31,61,.3)">Retired</span>`}[s]||`<span class="badge">${escHtml(s)}</span>`)
+    setContent(`
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+        <div>
+          <div style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--navy)">Policy Library</div>
+          <div style="font-size:.78rem;color:var(--muted);margin-top:.2rem">${_pols.length} polic${_pols.length!==1?'ies':'y'}</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="openPolicyModal()">+ Add Policy</button>
+      </div>
+      ${_pols.length===0?`<div class="empty"><div style="font-size:2.5rem;opacity:.3;margin-bottom:1rem">📄</div>
+        <h3>No policies documented yet</h3>
+        <p>Policies are the first thing auditors request. Add your Information Security Policy, Acceptable Use Policy, and other key documents here.</p>
+        <button class="btn btn-primary btn-sm" style="margin-top:1rem" onclick="openPolicyModal()">Add your first policy</button></div>`
+      :`<div style="overflow-x:auto"><table>
+        <thead><tr><th>Title</th><th>Category</th><th>Status</th><th>Version</th><th>Owner</th><th>Review</th><th>Frameworks</th><th></th></tr></thead>
+        <tbody>${_pols.map(p=>`<tr>
+          <td><strong>${escHtml(p.title)}</strong></td>
+          <td style="color:var(--muted)">${escHtml(p.category||'—')}</td>
+          <td>${sb(p.status)}</td>
+          <td><span style="font-family:'DM Mono',monospace;font-size:.78rem">v${escHtml(p.version||'1.0')}</span></td>
+          <td>${escHtml(p.owner||'—')}</td>
+          <td>${p.review_date?fmtDate(p.review_date):'—'}</td>
+          <td style="font-size:.75rem;color:var(--muted)">${(p.frameworks||[]).join(', ')||'—'}</td>
+          <td style="text-align:right;white-space:nowrap">
+            <button class="btn btn-outline btn-sm" onclick="openPolicyModal('${escJs(p.id)}')">Edit</button>
+            <button class="btn btn-danger btn-sm" style="margin-left:.25rem" onclick="deletePolicy('${escJs(p.id)}')">Delete</button>
+          </td></tr>`).join('')}
+        </tbody></table></div>`}`)
+  },
+
+  // INCIDENTS
+  async incidents() {
+    const res = await get('/api/incidents')
+    _incs = res.ok ? await res.json() : []
+    const sev = s => ({'critical':`<span class="badge" style="background:rgba(120,0,0,.1);color:#800">Critical</span>`,'high':`<span class="badge" style="background:rgba(180,60,0,.1);color:#c04010">High</span>`,'medium':`<span class="badge" style="background:rgba(200,169,110,.15);color:#8a6820">Medium</span>`,'low':`<span class="badge badge-active">Low</span>`}[s]||`<span class="badge">${escHtml(s)}</span>`)
+    const sta = s => ({'open':`<span class="badge" style="background:rgba(180,30,30,.1);color:#a02020">Open</span>`,'investigating':`<span class="badge" style="background:rgba(180,60,0,.1);color:#c04010">Investigating</span>`,'contained':`<span class="badge" style="background:rgba(200,169,110,.15);color:#8a6820">Contained</span>`,'resolved':`<span class="badge badge-active">Resolved</span>`,'closed':`<span class="badge badge-member">Closed</span>`}[s]||`<span class="badge">${escHtml(s)}</span>`)
+    const open = _incs.filter(i=>['open','investigating','contained'].includes(i.status)).length
+    setContent(`
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+        <div>
+          <div style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--navy)">Incident Register</div>
+          <div style="font-size:.78rem;color:var(--muted);margin-top:.2rem">${_incs.length} total · <span style="${open>0?'color:#a02020;font-weight:500':''}">${open} open</span></div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="openIncidentModal()">+ Log Incident</button>
+      </div>
+      ${_incs.length===0?`<div class="empty"><div style="font-size:2.5rem;opacity:.3;margin-bottom:1rem">🚨</div>
+        <h3>No incidents logged</h3>
+        <p>Log security, privacy, and availability incidents here. A documented incident register is required by SOC 2 CC7 and ISO 27001 A.5.24.</p>
+        <button class="btn btn-primary btn-sm" style="margin-top:1rem" onclick="openIncidentModal()">Log first incident</button></div>`
+      :`<div style="overflow-x:auto"><table>
+        <thead><tr><th>Title</th><th>Type</th><th>Severity</th><th>Status</th><th>Detected</th><th>Owner</th><th></th></tr></thead>
+        <tbody>${_incs.map(i=>`<tr>
+          <td><strong>${escHtml(i.title)}</strong>${i.affected?`<br><span style="font-size:.75rem;color:var(--muted)">${escHtml(i.affected)}</span>`:''}</td>
+          <td style="color:var(--muted);text-transform:capitalize">${escHtml(i.type||'security')}</td>
+          <td>${sev(i.severity)}</td>
+          <td>${sta(i.status)}</td>
+          <td>${i.detected_at?fmtDate(i.detected_at):'—'}</td>
+          <td>${escHtml(i.owner||'—')}</td>
+          <td style="text-align:right;white-space:nowrap">
+            <button class="btn btn-outline btn-sm" onclick="openIncidentModal('${escJs(i.id)}')">Edit</button>
+            <button class="btn btn-danger btn-sm" style="margin-left:.25rem" onclick="deleteIncident('${escJs(i.id)}')">Delete</button>
+          </td></tr>`).join('')}
+        </tbody></table></div>`}`)
+  },
+
+  // ASSETS
+  async assets() {
+    const res = await get('/api/assets')
+    _assts = res.ok ? await res.json() : []
+    const cls = c => ({'public':`<span class="badge badge-active">Public</span>`,'internal':`<span class="badge" style="background:rgba(14,31,61,.1);color:var(--navy)">Internal</span>`,'confidential':`<span class="badge" style="background:rgba(200,169,110,.15);color:#8a6820">Confidential</span>`,'restricted':`<span class="badge" style="background:rgba(180,30,30,.1);color:#a02020">Restricted</span>`}[c]||`<span class="badge">${escHtml(c)}</span>`)
+    const crit = c => ({'critical':`<span class="badge" style="background:rgba(180,30,30,.1);color:#a02020">Critical</span>`,'high':`<span class="badge" style="background:rgba(180,60,0,.1);color:#c04010">High</span>`,'medium':`<span class="badge" style="background:rgba(200,169,110,.15);color:#8a6820">Medium</span>`,'low':`<span class="badge badge-active">Low</span>`}[c]||`<span class="badge">${escHtml(c)}</span>`)
+    setContent(`
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+        <div>
+          <div style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--navy)">Asset Inventory</div>
+          <div style="font-size:.78rem;color:var(--muted);margin-top:.2rem">${_assts.length} asset${_assts.length!==1?'s':''}</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="openAssetModal()">+ Add Asset</button>
+      </div>
+      ${_assts.length===0?`<div class="empty"><div style="font-size:2.5rem;opacity:.3;margin-bottom:1rem">🗂</div>
+        <h3>No assets catalogued</h3>
+        <p>An asset inventory is required by ISO 27001 A.5.9 and NIST CSF ID.AM. Catalogue your data stores, systems, applications, and services here.</p>
+        <button class="btn btn-primary btn-sm" style="margin-top:1rem" onclick="openAssetModal()">Add first asset</button></div>`
+      :`<div style="overflow-x:auto"><table>
+        <thead><tr><th>Name</th><th>Type</th><th>Classification</th><th>Criticality</th><th>Owner</th><th>Location</th><th>Status</th><th></th></tr></thead>
+        <tbody>${_assts.map(a=>`<tr>
+          <td><strong>${escHtml(a.name)}</strong>${a.description?`<br><span style="font-size:.75rem;color:var(--muted)">${escHtml(a.description)}</span>`:''}</td>
+          <td style="color:var(--muted);text-transform:capitalize">${escHtml(a.type||'system')}</td>
+          <td>${cls(a.classification)}</td>
+          <td>${crit(a.criticality)}</td>
+          <td>${escHtml(a.owner||'—')}</td>
+          <td style="font-size:.78rem;color:var(--muted)">${escHtml(a.location||'—')}</td>
+          <td><span class="badge" style="text-transform:capitalize;${a.status==='active'?'background:rgba(11,122,99,.1);color:var(--teal)':'background:rgba(14,31,61,.08);color:var(--muted)'}">${escHtml(a.status||'active')}</span></td>
+          <td style="text-align:right;white-space:nowrap">
+            <button class="btn btn-outline btn-sm" onclick="openAssetModal('${escJs(a.id)}')">Edit</button>
+            <button class="btn btn-danger btn-sm" style="margin-left:.25rem" onclick="deleteAsset('${escJs(a.id)}')">Delete</button>
+          </td></tr>`).join('')}
+        </tbody></table></div>`}`)
+  },
+
+  // FRAMEWORKS
+  async frameworks() {
+    _currentFw = _currentFw || 'soc2'
+    const fwLabels = {soc2:'SOC 2',iso27001:'ISO 27001',nist_csf:'NIST CSF 2.0'}
+    setContent(`
+      <div style="display:flex;gap:.5rem;margin-bottom:1.5rem">
+        ${Object.keys(fwLabels).map(f=>`<button id="fw-btn-${f}" class="btn btn-sm ${f===_currentFw?'btn-primary':'btn-outline'}" onclick="switchFramework('${f}')">${fwLabels[f]}</button>`).join('')}
+      </div>
+      <div style="background:var(--white);border:1px solid rgba(14,31,61,.08);padding:1rem 1.5rem;margin-bottom:1.5rem">
+        <div id="fw-prog-text" style="font-size:.78rem;color:var(--muted);margin-bottom:.5rem">Loading…</div>
+        <div class="score-bar-track"><div id="fw-prog-bar" class="score-bar-fill" style="width:0%;background:var(--teal)"></div></div>
+      </div>
+      <div id="ctrl-table"></div>`)
+    await switchFramework(_currentFw)
+  },
 }
 
 // ── EVIDENCE ACTIONS ──────────────────────────────────────────────────────
@@ -1095,9 +1221,531 @@ function escJs(s) {
   return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'")
 }
 
+// ── GRC STATE ──────────────────────────────────────────────────────────────
+let _pols = [], _incs = [], _assts = [], _controlMap = {}, _currentFw = 'soc2'
+
+// ── POLICY ACTIONS ────────────────────────────────────────────────────────
+function openPolicyModal(id) {
+  const p = id ? _pols.find(x=>x.id===id) : null
+  document.getElementById('pol-id').value         = id||''
+  document.getElementById('pol-title').value      = p?.title||''
+  document.getElementById('pol-category').value   = p?.category||'Information Security'
+  document.getElementById('pol-status').value     = p?.status||'draft'
+  document.getElementById('pol-version').value    = p?.version||'1.0'
+  document.getElementById('pol-owner').value      = p?.owner||''
+  document.getElementById('pol-review').value     = p?.review_date?.slice(0,10)||''
+  document.getElementById('pol-frameworks').value = (p?.frameworks||[]).join(', ')
+  document.getElementById('pol-approved').value   = p?.approved_by||''
+  document.getElementById('pol-content').value    = p?.content||''
+  document.getElementById('pol-modal-title').textContent = id?'Edit Policy':'Add Policy'
+  document.getElementById('pol-err').classList.remove('show')
+  document.getElementById('pol-modal').style.display = 'flex'
+}
+async function savePolicy() {
+  const id = document.getElementById('pol-id').value
+  const errEl = document.getElementById('pol-err')
+  const payload = {
+    title:       document.getElementById('pol-title').value.trim(),
+    category:    document.getElementById('pol-category').value,
+    status:      document.getElementById('pol-status').value,
+    version:     document.getElementById('pol-version').value.trim()||'1.0',
+    owner:       document.getElementById('pol-owner').value.trim(),
+    review_date: document.getElementById('pol-review').value,
+    frameworks:  document.getElementById('pol-frameworks').value.split(',').map(s=>s.trim()).filter(Boolean),
+    approved_by: document.getElementById('pol-approved').value.trim(),
+    content:     document.getElementById('pol-content').value.trim(),
+  }
+  if (!payload.title) { errEl.textContent='Title is required'; errEl.classList.add('show'); return }
+  const res = id ? await put(`/api/policies/${id}`, payload) : await post('/api/policies', payload)
+  if (!res.ok) { const d=await res.json(); errEl.textContent=d.error||'Save failed'; errEl.classList.add('show'); return }
+  closeModal(); await SECTIONS.policies()
+}
+async function deletePolicy(id) {
+  if (!confirm('Delete this policy?')) return
+  await del(`/api/policies/${id}`); await SECTIONS.policies()
+}
+
+// ── INCIDENT ACTIONS ──────────────────────────────────────────────────────
+function openIncidentModal(id) {
+  const i = id ? _incs.find(x=>x.id===id) : null
+  document.getElementById('inc-id').value          = id||''
+  document.getElementById('inc-title').value       = i?.title||''
+  document.getElementById('inc-type').value        = i?.type||'security'
+  document.getElementById('inc-severity').value    = i?.severity||'medium'
+  document.getElementById('inc-status').value      = i?.status||'open'
+  document.getElementById('inc-description').value = i?.description||''
+  document.getElementById('inc-affected').value    = i?.affected||''
+  document.getElementById('inc-owner').value       = i?.owner||''
+  document.getElementById('inc-detected').value    = i?.detected_at?.slice(0,10)||''
+  document.getElementById('inc-reported').checked  = i?.reported||false
+  document.getElementById('inc-modal-title').textContent = id?'Edit Incident':'Log Incident'
+  document.getElementById('inc-err').classList.remove('show')
+  document.getElementById('inc-modal').style.display = 'flex'
+}
+async function saveIncident() {
+  const id = document.getElementById('inc-id').value
+  const errEl = document.getElementById('inc-err')
+  const payload = {
+    title:       document.getElementById('inc-title').value.trim(),
+    type:        document.getElementById('inc-type').value,
+    severity:    document.getElementById('inc-severity').value,
+    status:      document.getElementById('inc-status').value,
+    description: document.getElementById('inc-description').value.trim(),
+    affected:    document.getElementById('inc-affected').value.trim(),
+    owner:       document.getElementById('inc-owner').value.trim(),
+    detected_at: document.getElementById('inc-detected').value,
+    reported:    document.getElementById('inc-reported').checked,
+    root_cause:'', remediation:'', resolved_at:'',
+  }
+  if (!payload.title) { errEl.textContent='Title is required'; errEl.classList.add('show'); return }
+  const res = id ? await put(`/api/incidents/${id}`, payload) : await post('/api/incidents', payload)
+  if (!res.ok) { const d=await res.json(); errEl.textContent=d.error||'Save failed'; errEl.classList.add('show'); return }
+  closeModal(); await SECTIONS.incidents()
+}
+async function deleteIncident(id) {
+  if (!confirm('Delete this incident?')) return
+  await del(`/api/incidents/${id}`); await SECTIONS.incidents()
+}
+
+// ── ASSET ACTIONS ─────────────────────────────────────────────────────────
+function openAssetModal(id) {
+  const a = id ? _assts.find(x=>x.id===id) : null
+  document.getElementById('ast-id').value             = id||''
+  document.getElementById('ast-name').value           = a?.name||''
+  document.getElementById('ast-type').value           = a?.type||'system'
+  document.getElementById('ast-classification').value = a?.classification||'internal'
+  document.getElementById('ast-criticality').value    = a?.criticality||'medium'
+  document.getElementById('ast-owner').value          = a?.owner||''
+  document.getElementById('ast-location').value       = a?.location||''
+  document.getElementById('ast-description').value    = a?.description||''
+  document.getElementById('ast-status').value         = a?.status||'active'
+  document.getElementById('ast-modal-title').textContent = id?'Edit Asset':'Add Asset'
+  document.getElementById('ast-err').classList.remove('show')
+  document.getElementById('ast-modal').style.display = 'flex'
+}
+async function saveAsset() {
+  const id = document.getElementById('ast-id').value
+  const errEl = document.getElementById('ast-err')
+  const payload = {
+    name:           document.getElementById('ast-name').value.trim(),
+    type:           document.getElementById('ast-type').value,
+    classification: document.getElementById('ast-classification').value,
+    criticality:    document.getElementById('ast-criticality').value,
+    owner:          document.getElementById('ast-owner').value.trim(),
+    location:       document.getElementById('ast-location').value.trim(),
+    description:    document.getElementById('ast-description').value.trim(),
+    status:         document.getElementById('ast-status').value,
+    tags: [],
+  }
+  if (!payload.name) { errEl.textContent='Name is required'; errEl.classList.add('show'); return }
+  const res = id ? await put(`/api/assets/${id}`, payload) : await post('/api/assets', payload)
+  if (!res.ok) { const d=await res.json(); errEl.textContent=d.error||'Save failed'; errEl.classList.add('show'); return }
+  closeModal(); await SECTIONS.assets()
+}
+async function deleteAsset(id) {
+  if (!confirm('Delete this asset?')) return
+  await del(`/api/assets/${id}`); await SECTIONS.assets()
+}
+
+// ── FRAMEWORK ACTIONS ─────────────────────────────────────────────────────
+async function switchFramework(fw) {
+  _currentFw = fw
+  ;['soc2','iso27001','nist_csf'].forEach(f => {
+    const b = document.getElementById(`fw-btn-${f}`)
+    if (b) b.className = `btn btn-sm ${f===fw?'btn-primary':'btn-outline'}`
+  })
+  const res = await get(`/api/controls?framework=${fw}`)
+  _controlMap = {}
+  if (res.ok) { const rows = await res.json(); rows.forEach(r => { _controlMap[r.control_id] = r }) }
+  const fwDef = FRAMEWORKS[fw]
+  const total = fwDef.categories.reduce((s,c)=>s+c.controls.length, 0)
+  const done  = Object.values(_controlMap).filter(r=>r.status==='implemented').length
+  const pct   = total ? Math.round(done/total*100) : 0
+  const pb = document.getElementById('fw-prog-bar'); if (pb) pb.style.width = `${pct}%`
+  const pt = document.getElementById('fw-prog-text'); if (pt) pt.textContent = `${done}/${total} controls implemented (${pct}%)`
+  const ct = document.getElementById('ctrl-table'); if (ct) ct.innerHTML = renderControlTable(fwDef)
+}
+function renderControlTable(fwDef) {
+  return fwDef.categories.map(cat => {
+    const impl = cat.controls.filter(c=>(_controlMap[c.id]?.status==='implemented')).length
+    const pct  = Math.round(impl/cat.controls.length*100)
+    const barCol = pct>=80?'var(--teal)':pct>=40?'#C8A96E':'rgba(14,31,61,.2)'
+    return `<div style="background:var(--white);border:1px solid rgba(14,31,61,.08);margin-bottom:.75rem">
+      <div style="padding:.65rem 1rem;border-bottom:1px solid rgba(14,31,61,.07);display:flex;align-items:center;gap:.75rem;background:rgba(14,31,61,.02)">
+        <strong style="font-family:'DM Mono',monospace;font-size:.72rem;color:var(--navy)">${escHtml(cat.id)}</strong>
+        <span style="font-size:.82rem;color:var(--text)">${escHtml(cat.name)}</span>
+        <span style="margin-left:auto;font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted)">${impl}/${cat.controls.length}</span>
+        <div class="score-bar-track" style="width:70px;flex-shrink:0"><div class="score-bar-fill" style="width:${pct}%;background:${barCol}"></div></div>
+      </div>
+      <table style="margin:0">
+        <tbody>${cat.controls.map(ctrl => {
+          const cur = _controlMap[ctrl.id]||{}
+          const selOpts = [['not_started','Not Started'],['in_progress','In Progress'],['implemented','Implemented'],['na','N/A']]
+            .map(([v,l])=>`<option value="${v}"${cur.status===v||(!cur.status&&v==='not_started')?' selected':''}>${l}</option>`).join('')
+          return `<tr data-ctrl-id="${escHtml(ctrl.id)}">
+            <td style="font-family:'DM Mono',monospace;font-size:.72rem;width:80px;color:var(--muted);white-space:nowrap">${escHtml(ctrl.id)}</td>
+            <td style="font-size:.82rem">${escHtml(ctrl.name)}</td>
+            <td style="width:155px;padding:.5rem .75rem">
+              <select class="ctrl-status" style="font-size:.75rem;padding:.3rem .5rem;border:1px solid rgba(14,31,61,.2);background:var(--white);color:var(--text);width:100%" onchange="saveControl(this)">${selOpts}</select>
+            </td>
+            <td style="width:140px;padding:.5rem .75rem">
+              <input class="ctrl-owner" type="text" placeholder="Owner" value="${escHtml(cur.owner||'')}" style="font-size:.75rem;padding:.3rem .5rem;border:1px solid rgba(14,31,61,.2);width:100%;background:var(--white);color:var(--text)" onblur="saveControl(this)">
+            </td>
+          </tr>`}).join('')}
+        </tbody>
+      </table>
+    </div>`
+  }).join('')
+}
+async function saveControl(el) {
+  const row    = el.closest('tr')
+  const ctrlId = row.dataset.ctrlId
+  const status = row.querySelector('.ctrl-status').value
+  const owner  = row.querySelector('.ctrl-owner').value
+  _controlMap[ctrlId] = { ...(_controlMap[ctrlId]||{}), status, owner }
+  await put('/api/controls', { framework: _currentFw, control_id: ctrlId, status, owner, notes: _controlMap[ctrlId]?.notes||'' })
+  const fwDef = FRAMEWORKS[_currentFw]
+  const total = fwDef.categories.reduce((s,c)=>s+c.controls.length, 0)
+  const done  = Object.values(_controlMap).filter(r=>r.status==='implemented').length
+  const pct   = total ? Math.round(done/total*100) : 0
+  const pb = document.getElementById('fw-prog-bar'); if (pb) pb.style.width = `${pct}%`
+  const pt = document.getElementById('fw-prog-text'); if (pt) pt.textContent = `${done}/${total} controls implemented (${pct}%)`
+}
+
+// ── FRAMEWORKS DATA ───────────────────────────────────────────────────────
+const FRAMEWORKS = {
+  soc2: { name:'SOC 2', categories:[
+    { id:'CC1', name:'Control Environment', controls:[
+      {id:'CC1.1',name:'Demonstrates Commitment to Integrity and Ethical Values'},
+      {id:'CC1.2',name:'Exercises Board Oversight Responsibility'},
+      {id:'CC1.3',name:'Establishes Organizational Structure and Authority'},
+      {id:'CC1.4',name:'Demonstrates Commitment to Competence'},
+      {id:'CC1.5',name:'Enforces Accountability for Performance'},
+    ]},
+    { id:'CC2', name:'Communication and Information', controls:[
+      {id:'CC2.1',name:'Uses Relevant Quality Information'},
+      {id:'CC2.2',name:'Communicates Information Internally'},
+      {id:'CC2.3',name:'Communicates Information to External Parties'},
+    ]},
+    { id:'CC3', name:'Risk Assessment', controls:[
+      {id:'CC3.1',name:'Specifies Suitable Objectives'},
+      {id:'CC3.2',name:'Identifies and Analyzes Risk'},
+      {id:'CC3.3',name:'Assesses Fraud Risk'},
+      {id:'CC3.4',name:'Identifies and Analyzes Significant Change'},
+    ]},
+    { id:'CC4', name:'Monitoring Activities', controls:[
+      {id:'CC4.1',name:'Conducts Ongoing and Separate Evaluations'},
+      {id:'CC4.2',name:'Evaluates and Communicates Deficiencies'},
+    ]},
+    { id:'CC5', name:'Control Activities', controls:[
+      {id:'CC5.1',name:'Selects and Develops Control Activities'},
+      {id:'CC5.2',name:'Selects and Develops General Controls over Technology'},
+      {id:'CC5.3',name:'Deploys through Policies and Procedures'},
+    ]},
+    { id:'CC6', name:'Logical and Physical Access', controls:[
+      {id:'CC6.1',name:'Implements Logical Access Security Measures'},
+      {id:'CC6.2',name:'Manages User Registration and Removal'},
+      {id:'CC6.3',name:'Manages Role-Based Access Control'},
+      {id:'CC6.4',name:'Restricts Physical Access'},
+      {id:'CC6.5',name:'Removes Access Upon Termination'},
+      {id:'CC6.6',name:'Controls Access from External Networks'},
+      {id:'CC6.7',name:'Manages Mobile Device Access'},
+      {id:'CC6.8',name:'Prevents Unauthorized Use of Data'},
+    ]},
+    { id:'CC7', name:'System Operations', controls:[
+      {id:'CC7.1',name:'Detects and Monitors System Vulnerabilities'},
+      {id:'CC7.2',name:'Protects Against Malicious Code'},
+      {id:'CC7.3',name:'Detects and Analyzes Anomalies'},
+      {id:'CC7.4',name:'Responds to Security Incidents'},
+      {id:'CC7.5',name:'Recovers from Security Incidents'},
+    ]},
+    { id:'CC8', name:'Change Management', controls:[
+      {id:'CC8.1',name:'Manages Changes to Infrastructure and Software'},
+    ]},
+    { id:'CC9', name:'Risk Mitigation', controls:[
+      {id:'CC9.1',name:'Identifies and Mitigates Business Disruption Risks'},
+      {id:'CC9.2',name:'Manages Vendor and Business Partner Risk'},
+    ]},
+  ]},
+  iso27001: { name:'ISO 27001:2022', categories:[
+    { id:'A.5', name:'Organizational Controls', controls:[
+      {id:'A.5.1',name:'Information Security Policies'},
+      {id:'A.5.2',name:'Information Security Roles and Responsibilities'},
+      {id:'A.5.3',name:'Segregation of Duties'},
+      {id:'A.5.4',name:'Management Responsibilities'},
+      {id:'A.5.5',name:'Contact with Authorities'},
+      {id:'A.5.6',name:'Contact with Special Interest Groups'},
+      {id:'A.5.7',name:'Threat Intelligence'},
+      {id:'A.5.8',name:'Information Security in Project Management'},
+      {id:'A.5.9',name:'Inventory of Information and Other Assets'},
+      {id:'A.5.10',name:'Acceptable Use of Information and Other Assets'},
+      {id:'A.5.11',name:'Return of Assets'},
+      {id:'A.5.12',name:'Classification of Information'},
+      {id:'A.5.13',name:'Labelling of Information'},
+      {id:'A.5.14',name:'Information Transfer'},
+      {id:'A.5.15',name:'Access Control'},
+      {id:'A.5.16',name:'Identity Management'},
+      {id:'A.5.17',name:'Authentication Information'},
+      {id:'A.5.18',name:'Access Rights'},
+      {id:'A.5.19',name:'Information Security in Supplier Relationships'},
+      {id:'A.5.20',name:'Addressing Security in Supplier Agreements'},
+      {id:'A.5.21',name:'ICT Supply Chain Security'},
+      {id:'A.5.22',name:'Monitoring and Review of Supplier Services'},
+      {id:'A.5.23',name:'Information Security for Use of Cloud Services'},
+      {id:'A.5.24',name:'Information Security Incident Management Planning'},
+      {id:'A.5.25',name:'Assessment and Decision on Information Security Events'},
+      {id:'A.5.26',name:'Response to Information Security Incidents'},
+      {id:'A.5.27',name:'Learning from Information Security Incidents'},
+      {id:'A.5.28',name:'Collection of Evidence'},
+      {id:'A.5.29',name:'Information Security During Disruption'},
+      {id:'A.5.30',name:'ICT Readiness for Business Continuity'},
+      {id:'A.5.31',name:'Legal, Statutory, Regulatory, and Contractual Requirements'},
+      {id:'A.5.32',name:'Intellectual Property Rights'},
+      {id:'A.5.33',name:'Protection of Records'},
+      {id:'A.5.34',name:'Privacy and Protection of PII'},
+      {id:'A.5.35',name:'Independent Review of Information Security'},
+      {id:'A.5.36',name:'Compliance with Policies, Rules, and Standards'},
+      {id:'A.5.37',name:'Documented Operating Procedures'},
+    ]},
+    { id:'A.6', name:'People Controls', controls:[
+      {id:'A.6.1',name:'Screening'},
+      {id:'A.6.2',name:'Terms and Conditions of Employment'},
+      {id:'A.6.3',name:'Information Security Awareness, Education, and Training'},
+      {id:'A.6.4',name:'Disciplinary Process'},
+      {id:'A.6.5',name:'Responsibilities After Termination or Change'},
+      {id:'A.6.6',name:'Confidentiality or Non-Disclosure Agreements'},
+      {id:'A.6.7',name:'Remote Working'},
+      {id:'A.6.8',name:'Information Security Event Reporting'},
+    ]},
+    { id:'A.7', name:'Physical Controls', controls:[
+      {id:'A.7.1',name:'Physical Security Perimeters'},
+      {id:'A.7.2',name:'Physical Entry'},
+      {id:'A.7.3',name:'Securing Offices, Rooms, and Facilities'},
+      {id:'A.7.4',name:'Physical Security Monitoring'},
+      {id:'A.7.5',name:'Protecting Against Physical and Environmental Threats'},
+      {id:'A.7.6',name:'Working in Secure Areas'},
+      {id:'A.7.7',name:'Clear Desk and Clear Screen'},
+      {id:'A.7.8',name:'Equipment Siting and Protection'},
+      {id:'A.7.9',name:'Security of Assets Off-Premises'},
+      {id:'A.7.10',name:'Storage Media'},
+      {id:'A.7.11',name:'Supporting Utilities'},
+      {id:'A.7.12',name:'Cabling Security'},
+      {id:'A.7.13',name:'Equipment Maintenance'},
+      {id:'A.7.14',name:'Secure Disposal or Re-use of Equipment'},
+    ]},
+    { id:'A.8', name:'Technological Controls', controls:[
+      {id:'A.8.1',name:'User Endpoint Devices'},
+      {id:'A.8.2',name:'Privileged Access Rights'},
+      {id:'A.8.3',name:'Information Access Restriction'},
+      {id:'A.8.4',name:'Access to Source Code'},
+      {id:'A.8.5',name:'Secure Authentication'},
+      {id:'A.8.6',name:'Capacity Management'},
+      {id:'A.8.7',name:'Protection Against Malware'},
+      {id:'A.8.8',name:'Management of Technical Vulnerabilities'},
+      {id:'A.8.9',name:'Configuration Management'},
+      {id:'A.8.10',name:'Information Deletion'},
+      {id:'A.8.11',name:'Data Masking'},
+      {id:'A.8.12',name:'Data Leakage Prevention'},
+      {id:'A.8.13',name:'Information Backup'},
+      {id:'A.8.14',name:'Redundancy of Information Processing Facilities'},
+      {id:'A.8.15',name:'Logging'},
+      {id:'A.8.16',name:'Monitoring Activities'},
+      {id:'A.8.17',name:'Clock Synchronisation'},
+      {id:'A.8.18',name:'Use of Privileged Utility Programs'},
+      {id:'A.8.19',name:'Installation of Software on Operational Systems'},
+      {id:'A.8.20',name:'Networks Security'},
+      {id:'A.8.21',name:'Security of Network Services'},
+      {id:'A.8.22',name:'Segregation of Networks'},
+      {id:'A.8.23',name:'Web Filtering'},
+      {id:'A.8.24',name:'Use of Cryptography'},
+      {id:'A.8.25',name:'Secure Development Life Cycle'},
+      {id:'A.8.26',name:'Application Security Requirements'},
+      {id:'A.8.27',name:'Secure System Architecture and Engineering Principles'},
+      {id:'A.8.28',name:'Secure Coding'},
+      {id:'A.8.29',name:'Security Testing in Development and Acceptance'},
+      {id:'A.8.30',name:'Outsourced Development'},
+      {id:'A.8.31',name:'Separation of Development, Test, and Production Environments'},
+      {id:'A.8.32',name:'Change Management'},
+      {id:'A.8.33',name:'Test Information'},
+      {id:'A.8.34',name:'Protection of Information Systems During Audit Testing'},
+    ]},
+  ]},
+  nist_csf: { name:'NIST CSF 2.0', categories:[
+    { id:'GV', name:'Govern', controls:[
+      {id:'GV.OC',name:'Organizational Context'},
+      {id:'GV.RM',name:'Risk Management Strategy'},
+      {id:'GV.RR',name:'Roles, Responsibilities, and Authorities'},
+      {id:'GV.PO',name:'Policy'},
+      {id:'GV.OV',name:'Oversight'},
+      {id:'GV.SC',name:'Cybersecurity Supply Chain Risk Management'},
+    ]},
+    { id:'ID', name:'Identify', controls:[
+      {id:'ID.AM',name:'Asset Management'},
+      {id:'ID.RA',name:'Risk Assessment'},
+      {id:'ID.IM',name:'Improvement'},
+    ]},
+    { id:'PR', name:'Protect', controls:[
+      {id:'PR.AA',name:'Identity Management, Authentication, and Access Control'},
+      {id:'PR.AT',name:'Awareness and Training'},
+      {id:'PR.DS',name:'Data Security'},
+      {id:'PR.PS',name:'Platform Security'},
+      {id:'PR.IR',name:'Technology Infrastructure Resilience'},
+    ]},
+    { id:'DE', name:'Detect', controls:[
+      {id:'DE.CM',name:'Continuous Monitoring'},
+      {id:'DE.AE',name:'Adverse Event Analysis'},
+    ]},
+    { id:'RS', name:'Respond', controls:[
+      {id:'RS.MA',name:'Incident Management'},
+      {id:'RS.AN',name:'Incident Analysis'},
+      {id:'RS.CO',name:'Incident Response Reporting and Communication'},
+      {id:'RS.MI',name:'Incident Mitigation'},
+    ]},
+    { id:'RC', name:'Recover', controls:[
+      {id:'RC.RP',name:'Incident Recovery Plan Execution'},
+      {id:'RC.CO',name:'Incident Recovery Communication'},
+    ]},
+  ]},
+}
+
 // ── BOOT ───────────────────────────────────────────────────────────────────
 window.addEventListener('hashchange', () => nav((location.hash.slice(1) || 'dashboard').split('?')[0]))
 init()
 </script>
+
+      <!-- Policy modal -->
+      <div class="modal-overlay" id="pol-modal" style="display:none" onclick="if(event.target===this)closeModal()">
+        <div class="modal" style="max-width:540px;max-height:92vh;overflow-y:auto">
+          <h3 id="pol-modal-title">Add Policy</h3>
+          <input type="hidden" id="pol-id">
+          <div class="error-msg" id="pol-err"></div>
+          <label>Title *</label>
+          <input id="pol-title" type="text" placeholder="Information Security Policy">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+            <div><label>Category</label>
+              <select id="pol-category">
+                <option>Information Security</option><option>Privacy</option>
+                <option>Human Resources</option><option>Operations</option>
+                <option>Business Continuity</option><option>Legal &amp; Compliance</option>
+                <option>Vendor Management</option><option>Change Management</option><option>Other</option>
+              </select></div>
+            <div><label>Status</label>
+              <select id="pol-status">
+                <option value="draft">Draft</option><option value="review">In Review</option>
+                <option value="active">Active</option><option value="retired">Retired</option>
+              </select></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+            <div><label>Version</label><input id="pol-version" type="text" placeholder="1.0"></div>
+            <div><label>Owner</label><input id="pol-owner" type="text" placeholder="CISO / DPO"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+            <div><label>Review Date</label><input id="pol-review" type="date"></div>
+            <div><label>Approved By</label><input id="pol-approved" type="text" placeholder="CEO / Board"></div>
+          </div>
+          <label>Frameworks (comma-separated)</label>
+          <input id="pol-frameworks" type="text" placeholder="SOC 2, ISO 27001, NIST CSF">
+          <label>Policy Content / Summary</label>
+          <textarea id="pol-content" placeholder="Paste policy text or a brief summary…" style="min-height:100px"></textarea>
+          <div class="modal-actions">
+            <button class="btn btn-outline btn-sm" onclick="closeModal()">Cancel</button>
+            <button class="btn btn-primary btn-sm" onclick="savePolicy()">Save Policy</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Incident modal -->
+      <div class="modal-overlay" id="inc-modal" style="display:none" onclick="if(event.target===this)closeModal()">
+        <div class="modal" style="max-width:540px;max-height:92vh;overflow-y:auto">
+          <h3 id="inc-modal-title">Log Incident</h3>
+          <input type="hidden" id="inc-id">
+          <div class="error-msg" id="inc-err"></div>
+          <label>Title *</label>
+          <input id="inc-title" type="text" placeholder="Unauthorized access to customer data">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+            <div><label>Type</label>
+              <select id="inc-type">
+                <option value="security">Security</option><option value="privacy">Privacy</option>
+                <option value="availability">Availability</option><option value="integrity">Integrity</option>
+                <option value="other">Other</option>
+              </select></div>
+            <div><label>Severity</label>
+              <select id="inc-severity">
+                <option value="critical">Critical</option><option value="high">High</option>
+                <option value="medium">Medium</option><option value="low">Low</option>
+              </select></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+            <div><label>Status</label>
+              <select id="inc-status">
+                <option value="open">Open</option><option value="investigating">Investigating</option>
+                <option value="contained">Contained</option><option value="resolved">Resolved</option>
+                <option value="closed">Closed</option>
+              </select></div>
+            <div><label>Detected Date</label><input id="inc-detected" type="date"></div>
+          </div>
+          <label>Affected Systems / Data</label>
+          <input id="inc-affected" type="text" placeholder="Production database, user PII">
+          <label>Description</label>
+          <textarea id="inc-description" placeholder="What happened?"></textarea>
+          <label>Owner</label>
+          <input id="inc-owner" type="text" placeholder="Security lead">
+          <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:1rem">
+            <input id="inc-reported" type="checkbox" style="width:auto;margin-bottom:0">
+            <span style="font-size:.82rem">Reported to authorities / data protection regulator</span>
+          </div>
+          <div class="modal-actions">
+            <button class="btn btn-outline btn-sm" onclick="closeModal()">Cancel</button>
+            <button class="btn btn-primary btn-sm" onclick="saveIncident()">Save Incident</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Asset modal -->
+      <div class="modal-overlay" id="ast-modal" style="display:none" onclick="if(event.target===this)closeModal()">
+        <div class="modal" style="max-width:540px;max-height:92vh;overflow-y:auto">
+          <h3 id="ast-modal-title">Add Asset</h3>
+          <input type="hidden" id="ast-id">
+          <div class="error-msg" id="ast-err"></div>
+          <label>Name *</label>
+          <input id="ast-name" type="text" placeholder="Customer Database">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+            <div><label>Type</label>
+              <select id="ast-type">
+                <option value="data">Data</option><option value="system">System</option>
+                <option value="application">Application</option><option value="physical">Physical</option>
+                <option value="people">People</option><option value="service">Service</option>
+              </select></div>
+            <div><label>Classification</label>
+              <select id="ast-classification">
+                <option value="public">Public</option><option value="internal">Internal</option>
+                <option value="confidential">Confidential</option><option value="restricted">Restricted</option>
+              </select></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+            <div><label>Criticality</label>
+              <select id="ast-criticality">
+                <option value="critical">Critical</option><option value="high">High</option>
+                <option value="medium">Medium</option><option value="low">Low</option>
+              </select></div>
+            <div><label>Status</label>
+              <select id="ast-status">
+                <option value="active">Active</option><option value="inactive">Inactive</option>
+                <option value="decommissioned">Decommissioned</option>
+              </select></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+            <div><label>Owner</label><input id="ast-owner" type="text" placeholder="IT / Engineering"></div>
+            <div><label>Location</label><input id="ast-location" type="text" placeholder="AWS us-east-1 / On-prem"></div>
+          </div>
+          <label>Description</label>
+          <textarea id="ast-description" placeholder="Brief description of this asset…" style="min-height:70px"></textarea>
+          <div class="modal-actions">
+            <button class="btn btn-outline btn-sm" onclick="closeModal()">Cancel</button>
+            <button class="btn btn-primary btn-sm" onclick="saveAsset()">Save Asset</button>
+          </div>
+        </div>
+      </div>
+
 </body>
 </html>

@@ -12,6 +12,10 @@ import { calendarRoutes } from './routes/calendar'
 import { snapshotRoutes } from './routes/snapshots'
 import { auditRoutes }    from './routes/audit'
 import { scoreRoutes }    from './routes/score'
+import { policyRoutes }   from './routes/policies'
+import { incidentRoutes } from './routes/incidents'
+import { assetRoutes }    from './routes/assets'
+import { controlRoutes }  from './routes/controls'
 import type { AppType } from './types'
 
 const app = new Hono<AppType>()
@@ -49,6 +53,10 @@ app.route('/api/calendar',  calendarRoutes)
 app.route('/api/snapshots', snapshotRoutes)
 app.route('/api/audit',     auditRoutes)
 app.route('/api/score',     scoreRoutes)
+app.route('/api/policies',  policyRoutes)
+app.route('/api/incidents', incidentRoutes)
+app.route('/api/assets',    assetRoutes)
+app.route('/api/controls',  controlRoutes)
 
 // Serve frontend assets for all non-API routes
 app.all('*', (c) => c.env.ASSETS.fetch(c.req.raw))
