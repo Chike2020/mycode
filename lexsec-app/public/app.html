@@ -281,7 +281,7 @@ async function init() {
 
     if (S.currentOrg?.plan === 'free') document.getElementById('sb-upgrade').style.display = ''
 
-    const hash = location.hash.slice(1) || 'dashboard'
+    const hash = (location.hash.slice(1) || 'dashboard').split('?')[0]
     await nav(hash)
   } catch(e) {
     if (e.message !== 'unauth') console.error(e)
@@ -812,8 +812,12 @@ const SECTIONS = {
     const sub = res.ok ? await res.json() : {}
     const plansRes = await get('/api/billing/plans')
     const plans = plansRes.ok ? await plansRes.json() : {}
+    const success = location.hash.includes('success=true')
 
     setContent(`
+      ${success ? `<div style="background:rgba(11,122,99,.1);border:1px solid rgba(11,122,99,.3);color:var(--teal);padding:.9rem 1.25rem;margin-bottom:1.5rem;font-size:.88rem">
+        ✓ Your subscription is active. Welcome to LexSec Pro — your 14-day free trial has started.
+      </div>` : ''}
       <div class="card" style="margin-bottom:2rem">
         <div class="card-header"><div class="card-title">Current Plan</div></div>
         <div class="card-body">
@@ -1092,7 +1096,7 @@ function escJs(s) {
 }
 
 // ── BOOT ───────────────────────────────────────────────────────────────────
-window.addEventListener('hashchange', () => nav(location.hash.slice(1) || 'dashboard'))
+window.addEventListener('hashchange', () => nav((location.hash.slice(1) || 'dashboard').split('?')[0]))
 init()
 </script>
 </body>
