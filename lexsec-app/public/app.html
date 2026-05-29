@@ -427,8 +427,56 @@ const SECTIONS = {
     const grouped  = res.ok ? await res.json() : {}
     const entries  = Object.entries(grouped)
 
+    const modalsHtml = `
+      <div class="modal-overlay" id="ev-modal" style="display:none" onclick="if(event.target===this)closeModal()">
+        <div class="modal">
+          <h3>Upload Evidence File</h3>
+          <div class="error-msg" id="ev-err"></div>
+          <div id="ev-dedup-banner" style="display:none;background:#0d3b26;border:1px solid var(--green);border-radius:8px;padding:.75rem 1rem;margin-bottom:.75rem;font-size:.82rem;color:var(--green)"></div>
+          <label>Framework</label>
+          <select id="ev-fw" style="width:100%;padding:.5rem;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.88rem">
+            <option value="">— select framework —</option>
+            <option value="soc2">SOC 2</option>
+            <option value="iso27001">ISO 27001</option>
+            <option value="nist_csf">NIST CSF 2.0</option>
+            <option value="ai_rmf">AI RMF</option>
+          </select>
+          <label>Control ID</label>
+          <input type="text" id="ev-ctrl" placeholder="e.g. CC6.1 / A.5.15 / PR.AA">
+          <label>Owner</label>
+          <input type="text" id="ev-owner" placeholder="Responsible team or person">
+          <label>Collection Date</label>
+          <input type="date" id="ev-date">
+          <div class="modal-actions">
+            <button class="btn btn-outline btn-sm" onclick="cancelUpload()">Cancel</button>
+            <button class="btn btn-primary btn-sm" id="ev-submit" onclick="confirmUpload()">Upload</button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-overlay" id="ev-map-modal" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+        <div class="modal">
+          <h3>Map to Additional Control</h3>
+          <div class="error-msg" id="ev-map-err"></div>
+          <label>Framework</label>
+          <select id="ev-map-fw" style="width:100%;padding:.5rem;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.88rem">
+            <option value="">— select framework —</option>
+            <option value="soc2">SOC 2</option>
+            <option value="iso27001">ISO 27001</option>
+            <option value="nist_csf">NIST CSF 2.0</option>
+            <option value="ai_rmf">AI RMF</option>
+          </select>
+          <label>Control ID</label>
+          <input type="text" id="ev-map-ctrl" placeholder="e.g. CC6.1 / A.5.15 / PR.AA">
+          <input type="hidden" id="ev-map-evidence-id">
+          <div class="modal-actions">
+            <button class="btn btn-outline btn-sm" onclick="document.getElementById('ev-map-modal').style.display='none'">Cancel</button>
+            <button class="btn btn-primary btn-sm" id="ev-map-submit" onclick="saveEvidenceMapping()">Save Mapping</button>
+          </div>
+        </div>
+      </div>`
+
     if (!entries.length) {
-      setContent(`<div class="empty"><div class="empty-icon">📋</div><h3>No evidence yet</h3><p>Upload files mapped to compliance controls (SOC 2, ISO 27001, HIPAA, NIST).</p></div>`)
+      setContent(`<div class="empty"><div class="empty-icon">📋</div><h3>No evidence yet</h3><p>Upload files mapped to compliance controls (SOC 2, ISO 27001, HIPAA, NIST).</p></div>` + modalsHtml)
       return
     }
 
@@ -444,7 +492,7 @@ const SECTIONS = {
         </div>
         <div class="card-body" style="padding:0">
           <table>
-            <thead><tr><th>File</th><th>Type</th><th>Size</th><th>Owner</th><th>Collected</th><th>Uploaded</th><th></th></tr></thead>
+            <thead><tr><th>File</th><th>Type</th><th>Size</th><th>Owner</th><th>Collected</th><th>Uploaded</th><th>Mapped To</th><th></th></tr></thead>
             <tbody>
               ${files.map(f => `<tr>
                 <td><a href="${f.fileUrl}" target="_blank" style="color:var(--teal);text-decoration:none">${escHtml(f.name)}</a></td>
@@ -453,6 +501,10 @@ const SECTIONS = {
                 <td style="font-size:.78rem">${escHtml(f.owner||'—')}</td>
                 <td style="font-size:.78rem;color:var(--muted)">${f.collectionDate||'—'}</td>
                 <td style="font-size:.78rem;color:var(--muted)">${fmtDate(f.uploadedAt)}</td>
+                <td style="font-size:.75rem">
+                  ${(f.mappings||[]).map(m => `<span style="display:inline-flex;align-items:center;gap:2px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1px 5px;margin:1px;white-space:nowrap">${escHtml(m.framework)}:${escHtml(m.controlId)}<button onclick="removeMapping('${f.id}','${m.id}')" style="background:none;border:none;color:var(--muted);cursor:pointer;padding:0 0 0 3px;line-height:1">×</button></span>`).join('')}
+                  <button class="btn btn-outline btn-sm" style="font-size:.65rem;padding:1px 6px" onclick="openAddMappingModal('${f.id}')">+ Map</button>
+                </td>
                 <td><button class="btn btn-danger btn-sm" onclick="deleteEvidence('${f.id}')">Delete</button></td>
               </tr>`).join('')}
             </tbody>
@@ -461,26 +513,7 @@ const SECTIONS = {
       </div>`
     }).join('')
 
-    setContent(html + `
-      <!-- Upload modal -->
-      <div class="modal-overlay" id="ev-modal" style="display:none" onclick="if(event.target===this)closeModal()">
-        <div class="modal">
-          <h3>Upload Evidence File</h3>
-          <div class="error-msg" id="ev-err"></div>
-          <label>Framework</label>
-          <input type="text" id="ev-fw" placeholder="SOC2 / ISO27001 / HIPAA">
-          <label>Control Key</label>
-          <input type="text" id="ev-ctrl" placeholder="CC6.1 / A.8.2 / §164.312">
-          <label>Owner</label>
-          <input type="text" id="ev-owner" placeholder="Responsible team or person">
-          <label>Collection Date</label>
-          <input type="date" id="ev-date">
-          <div class="modal-actions">
-            <button class="btn btn-outline btn-sm" onclick="cancelUpload()">Cancel</button>
-            <button class="btn btn-primary btn-sm" id="ev-submit" onclick="confirmUpload()">Upload</button>
-          </div>
-        </div>
-      </div>`)
+    setContent(html + modalsHtml)
   },
 
   // ── RISKS ─────────────────────────────────────────────────────────────────
@@ -984,29 +1017,49 @@ const SECTIONS = {
 }
 
 // ── EVIDENCE ACTIONS ──────────────────────────────────────────────────────
-let _pendingFile = null
+let _pendingFile = null, _pendingHash = ''
 
-function uploadEvidence(input) {
+async function computeFileHash(file) {
+  const buf = await file.arrayBuffer()
+  const digest = await crypto.subtle.digest('SHA-256', buf)
+  return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2,'0')).join('')
+}
+
+async function uploadEvidence(input) {
   const file = input.files[0]
   if (!file) return
   _pendingFile = file
-  document.getElementById('ev-modal').style.display = 'flex'
+  _pendingHash = ''
   input.value = ''
+  const modal = document.getElementById('ev-modal')
+  const banner = document.getElementById('ev-dedup-banner')
+  if (banner) banner.style.display = 'none'
+  modal.style.display = 'flex'
+  // Compute hash in background while user fills form
+  computeFileHash(file).then(h => { _pendingHash = h })
 }
 
 function cancelUpload() {
   _pendingFile = null
+  _pendingHash = ''
   closeModal()
 }
 
 async function confirmUpload() {
   if (!_pendingFile) return
-  const btn  = document.getElementById('ev-submit')
-  const errEl = document.getElementById('ev-err')
-  const fw   = document.getElementById('ev-fw').value.trim()
-  const ctrl = document.getElementById('ev-ctrl').value.trim()
-  if (!fw || !ctrl) { errEl.textContent = 'Framework and control key are required'; errEl.classList.add('show'); return }
+  const btn    = document.getElementById('ev-submit')
+  const errEl  = document.getElementById('ev-err')
+  const banner = document.getElementById('ev-dedup-banner')
+  const fw     = document.getElementById('ev-fw').value.trim()
+  const ctrl   = document.getElementById('ev-ctrl').value.trim()
+  if (!fw || !ctrl) { errEl.textContent = 'Framework and control ID are required'; errEl.classList.add('show'); return }
+  errEl.classList.remove('show')
   btn.disabled = true; btn.textContent = 'Uploading…'
+
+  // Ensure hash is ready (may still be computing on slow devices)
+  if (!_pendingHash) {
+    try { _pendingHash = await computeFileHash(_pendingFile) } catch { _pendingHash = '' }
+  }
 
   const reader = new FileReader()
   reader.onload = async e => {
@@ -1018,10 +1071,22 @@ async function confirmUpload() {
       dataUrl:        e.target.result,
       owner:          document.getElementById('ev-owner').value.trim(),
       collectionDate: document.getElementById('ev-date').value,
+      contentHash:    _pendingHash,
     })
     const data = await res.json()
     if (!res.ok) { errEl.textContent = data.error || 'Upload failed'; errEl.classList.add('show'); btn.disabled = false; btn.textContent = 'Upload'; return }
-    _pendingFile = null
+
+    if (data.wasDuplicate) {
+      // Show dedup banner, don't close modal — let user see the result
+      banner.innerHTML = `&#10003; This file already exists as <strong>${escHtml(data.existingName)}</strong>. A new mapping to <strong>${escHtml(fw)}:${escHtml(ctrl)}</strong> has been added instead of re-uploading.`
+      banner.style.display = 'block'
+      btn.disabled = false; btn.textContent = 'Close'
+      btn.onclick = () => { closeModal(); SECTIONS.evidence() }
+      _pendingFile = null; _pendingHash = ''
+      return
+    }
+
+    _pendingFile = null; _pendingHash = ''
     closeModal()
     await SECTIONS.evidence()
   }
@@ -1031,6 +1096,42 @@ async function confirmUpload() {
 async function deleteEvidence(id) {
   if (!confirm('Delete this evidence file?')) return
   await del(`/api/evidence/${id}`)
+  await SECTIONS.evidence()
+}
+
+function openAddMappingModal(evidenceId) {
+  document.getElementById('ev-map-evidence-id').value = evidenceId
+  document.getElementById('ev-map-fw').value = ''
+  document.getElementById('ev-map-ctrl').value = ''
+  document.getElementById('ev-map-err').classList.remove('show')
+  const btn = document.getElementById('ev-map-submit')
+  btn.disabled = false; btn.textContent = 'Save Mapping'
+  document.getElementById('ev-map-modal').style.display = 'flex'
+}
+
+async function saveEvidenceMapping() {
+  const evId  = document.getElementById('ev-map-evidence-id').value
+  const fw    = document.getElementById('ev-map-fw').value.trim()
+  const ctrl  = document.getElementById('ev-map-ctrl').value.trim()
+  const errEl = document.getElementById('ev-map-err')
+  const btn   = document.getElementById('ev-map-submit')
+  if (!fw || !ctrl) { errEl.textContent = 'Framework and control ID are required'; errEl.classList.add('show'); return }
+  errEl.classList.remove('show')
+  btn.disabled = true; btn.textContent = 'Saving…'
+  const res = await post(`/api/evidence/${evId}/mappings`, { framework: fw, controlId: ctrl })
+  if (!res.ok) {
+    const d = await res.json()
+    errEl.textContent = d.error || 'Failed to save mapping'
+    errEl.classList.add('show')
+    btn.disabled = false; btn.textContent = 'Save Mapping'
+    return
+  }
+  document.getElementById('ev-map-modal').style.display = 'none'
+  await SECTIONS.evidence()
+}
+
+async function removeMapping(evidenceId, mapId) {
+  await del(`/api/evidence/${evidenceId}/mappings/${mapId}`)
   await SECTIONS.evidence()
 }
 

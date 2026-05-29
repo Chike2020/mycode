@@ -12,18 +12,30 @@ evidenceRoutes.use('*', requireAuth)
 const MAX_FILE_BYTES = 10 * 1024 * 1024   // 10 MB per file
 const MAX_ORG_BYTES  = 200 * 1024 * 1024  // 200 MB per org
 
-// GET /api/evidence — metadata grouped by "fwId|ctrlKey"
+// GET /api/evidence — metadata grouped by "fwId|ctrlKey", with mappings array
 evidenceRoutes.get('/', async (c) => {
   const orgId = c.get('orgId')
   if (!orgId) return c.json({ error: 'No organization context' }, 400)
 
   const result = await c.env.DB.prepare(
-    'SELECT id, fw_id, ctrl_key, name, mime_type, size, owner, collection_date, uploaded_by, uploaded_at FROM evidence WHERE org_id = ? ORDER BY uploaded_at ASC'
+    'SELECT id, fw_id, ctrl_key, name, mime_type, size, owner, collection_date, uploaded_by, uploaded_at, content_hash FROM evidence WHERE org_id = ? ORDER BY uploaded_at ASC'
   ).bind(orgId).all<{
     id: string; fw_id: string; ctrl_key: string; name: string
     mime_type: string; size: number; owner: string
     collection_date: string; uploaded_by: string | null; uploaded_at: string
+    content_hash: string
   }>()
+
+  // Load all mappings for this org in one query
+  const mappingRows = await c.env.DB.prepare(
+    'SELECT id, evidence_id, framework, control_id FROM evidence_ctrl_mappings WHERE org_id = ?'
+  ).bind(orgId).all<{ id: string; evidence_id: string; framework: string; control_id: string }>()
+
+  const mappingsByEvId: Record<string, { id: string; framework: string; controlId: string }[]> = {}
+  for (const m of mappingRows.results) {
+    if (!mappingsByEvId[m.evidence_id]) mappingsByEvId[m.evidence_id] = []
+    mappingsByEvId[m.evidence_id].push({ id: m.id, framework: m.framework, controlId: m.control_id })
+  }
 
   const grouped: Record<string, unknown[]> = {}
   for (const r of result.results) {
@@ -37,7 +49,9 @@ evidenceRoutes.get('/', async (c) => {
       owner:          r.owner,
       collectionDate: r.collection_date,
       uploadedAt:     r.uploaded_at,
+      contentHash:    r.content_hash,
       fileUrl:        `/api/evidence/${r.id}/file`,
+      mappings:       mappingsByEvId[r.id] ?? [],
     })
   }
   return c.json(grouped)
@@ -64,7 +78,7 @@ evidenceRoutes.get('/:id/file', async (c) => {
   return new Response(obj.body, { headers })
 })
 
-// POST /api/evidence — upload a file (base64 dataUrl)
+// POST /api/evidence — upload a file (base64 dataUrl), with hash dedup
 evidenceRoutes.post(
   '/',
   zValidator('json', z.object({
@@ -75,13 +89,30 @@ evidenceRoutes.post(
     dataUrl:        z.string().min(1),
     owner:          z.string().default(''),
     collectionDate: z.string().default(''),
+    contentHash:    z.string().default(''),
   })),
   async (c) => {
     const orgId  = c.get('orgId')
     const userId = c.get('userId')
     if (!orgId) return c.json({ error: 'No organization context' }, 400)
 
-    const { fwId, ctrlKey, name, mimeType, dataUrl, owner, collectionDate } = c.req.valid('json')
+    const { fwId, ctrlKey, name, mimeType, dataUrl, owner, collectionDate, contentHash } = c.req.valid('json')
+
+    // Hash-based dedup: if we already have this content, just add a new mapping
+    if (contentHash) {
+      const existing = await c.env.DB.prepare(
+        'SELECT id, name FROM evidence WHERE org_id = ? AND content_hash = ?'
+      ).bind(orgId, contentHash).first<{ id: string; name: string }>()
+
+      if (existing) {
+        // Add a new mapping entry (INSERT OR IGNORE handles duplicates)
+        const mapId = generateId()
+        await c.env.DB.prepare(
+          'INSERT OR IGNORE INTO evidence_ctrl_mappings (id, evidence_id, org_id, framework, control_id) VALUES (?, ?, ?, ?, ?)'
+        ).bind(mapId, existing.id, orgId, fwId, ctrlKey).run()
+        return c.json({ ok: true, id: existing.id, wasDuplicate: true, existingName: existing.name }, 200)
+      }
+    }
 
     // Decode base64 dataUrl → binary
     const commaIdx = dataUrl.indexOf(',')
@@ -105,21 +136,69 @@ evidenceRoutes.post(
       return c.json({ error: 'Organisation storage limit reached' }, 413)
     }
 
-    const id     = 'ev_' + generateId()
-    const r2Key  = `evidence/${orgId}/${id}`
+    const id    = 'ev_' + generateId()
+    const r2Key = `evidence/${orgId}/${id}`
 
     await c.env.BUCKET.put(r2Key, binary, {
       httpMetadata: { contentType: mimeType || 'application/octet-stream' },
     })
 
     await c.env.DB.prepare(`
-      INSERT INTO evidence (id, org_id, fw_id, ctrl_key, name, mime_type, size, r2_key, owner, collection_date, uploaded_by)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).bind(id, orgId, fwId, ctrlKey, name, mimeType, binary.byteLength, r2Key, owner, collectionDate, userId).run()
+      INSERT INTO evidence (id, org_id, fw_id, ctrl_key, name, mime_type, size, r2_key, owner, collection_date, uploaded_by, content_hash)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(id, orgId, fwId, ctrlKey, name, mimeType, binary.byteLength, r2Key, owner, collectionDate, userId, contentHash).run()
+
+    // Seed the primary mapping
+    if (fwId && ctrlKey) {
+      const mapId = generateId()
+      await c.env.DB.prepare(
+        'INSERT OR IGNORE INTO evidence_ctrl_mappings (id, evidence_id, org_id, framework, control_id) VALUES (?, ?, ?, ?, ?)'
+      ).bind(mapId, id, orgId, fwId, ctrlKey).run()
+    }
 
     return c.json({ ok: true, id, uploadedAt: new Date().toISOString() }, 201)
   }
 )
+
+// POST /api/evidence/:id/mappings — add a control mapping to an existing file
+evidenceRoutes.post(
+  '/:id/mappings',
+  zValidator('json', z.object({
+    framework: z.string().min(1),
+    controlId: z.string().min(1),
+  })),
+  async (c) => {
+    const orgId = c.get('orgId')
+    if (!orgId) return c.json({ error: 'No organization context' }, 400)
+    const evId = c.req.param('id')
+
+    // Verify the evidence belongs to this org
+    const ev = await c.env.DB.prepare('SELECT id FROM evidence WHERE id = ? AND org_id = ?')
+      .bind(evId, orgId).first<{ id: string }>()
+    if (!ev) return c.json({ error: 'Not found' }, 404)
+
+    const { framework, controlId } = c.req.valid('json')
+    const mapId = generateId()
+    await c.env.DB.prepare(
+      'INSERT OR IGNORE INTO evidence_ctrl_mappings (id, evidence_id, org_id, framework, control_id) VALUES (?, ?, ?, ?, ?)'
+    ).bind(mapId, evId, orgId, framework, controlId).run()
+
+    return c.json({ ok: true, id: mapId, evidenceId: evId, framework, controlId }, 201)
+  }
+)
+
+// DELETE /api/evidence/:id/mappings/:mapId — remove a single control mapping
+evidenceRoutes.delete('/:id/mappings/:mapId', async (c) => {
+  const orgId = c.get('orgId')
+  if (!orgId) return c.json({ error: 'No organization context' }, 400)
+  const { id, mapId } = c.req.param()
+
+  const r = await c.env.DB.prepare(
+    'DELETE FROM evidence_ctrl_mappings WHERE id = ? AND evidence_id = ? AND org_id = ?'
+  ).bind(mapId, id, orgId).run()
+  if (!r.meta.changes) return c.json({ error: 'Not found' }, 404)
+  return c.json({ ok: true })
+})
 
 // DELETE /api/evidence/:id
 evidenceRoutes.delete('/:id', async (c) => {
@@ -132,6 +211,7 @@ evidenceRoutes.delete('/:id', async (c) => {
   if (!row) return c.json({ error: 'Not found' }, 404)
 
   const ops: Promise<unknown>[] = [
+    c.env.DB.prepare('DELETE FROM evidence_ctrl_mappings WHERE evidence_id = ?').bind(id).run(),
     c.env.DB.prepare('DELETE FROM evidence WHERE id = ?').bind(id).run(),
   ]
   if (row.r2_key) ops.push(c.env.BUCKET.delete(row.r2_key))
@@ -148,7 +228,10 @@ evidenceRoutes.delete('/', async (c) => {
   const rows = await c.env.DB.prepare('SELECT r2_key FROM evidence WHERE org_id = ? AND r2_key IS NOT NULL')
     .bind(orgId).all<{ r2_key: string }>()
 
-  await c.env.DB.prepare('DELETE FROM evidence WHERE org_id = ?').bind(orgId).run()
+  await Promise.all([
+    c.env.DB.prepare('DELETE FROM evidence_ctrl_mappings WHERE org_id = ?').bind(orgId).run(),
+    c.env.DB.prepare('DELETE FROM evidence WHERE org_id = ?').bind(orgId).run(),
+  ])
 
   if (rows.results.length > 0) {
     await c.env.BUCKET.delete(rows.results.map(r => r.r2_key))
