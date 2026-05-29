@@ -9,7 +9,7 @@ export const controlRoutes = new Hono<AppType>()
 controlRoutes.use('*', requireAuth)
 
 const controlSchema = z.object({
-  framework:  z.enum(['soc2', 'iso27001', 'nist_csf']),
+  framework:  z.enum(['soc2', 'iso27001', 'nist_csf', 'ai_rmf']),
   control_id: z.string().min(1),
   status:     z.enum(['not_started', 'in_progress', 'implemented', 'na']).default('not_started'),
   owner:      z.string().default(''),

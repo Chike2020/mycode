@@ -967,10 +967,12 @@ const SECTIONS = {
   // FRAMEWORKS
   async frameworks() {
     _currentFw = _currentFw || 'soc2'
-    const fwLabels = {soc2:'SOC 2',iso27001:'ISO 27001',nist_csf:'NIST CSF 2.0'}
+    const fwLabels = {soc2:'SOC 2',iso27001:'ISO 27001',nist_csf:'NIST CSF 2.0',ai_rmf:'AI RMF'}
     setContent(`
-      <div style="display:flex;gap:.5rem;margin-bottom:1.5rem">
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.5rem">
         ${Object.keys(fwLabels).map(f=>`<button id="fw-btn-${f}" class="btn btn-sm ${f===_currentFw?'btn-primary':'btn-outline'}" onclick="switchFramework('${f}')">${fwLabels[f]}</button>`).join('')}
+        <div style="flex:1"></div>
+        <button id="fw-btn-crossmap" class="btn btn-sm btn-outline" onclick="showCrossmap()" style="border-color:var(--gold);color:#8a6820">⟷ Crossmap</button>
       </div>
       <div style="background:var(--white);border:1px solid rgba(14,31,61,.08);padding:1rem 1.5rem;margin-bottom:1.5rem">
         <div id="fw-prog-text" style="font-size:.78rem;color:var(--muted);margin-bottom:.5rem">Loading…</div>
@@ -1350,10 +1352,13 @@ async function deleteAsset(id) {
 // ── FRAMEWORK ACTIONS ─────────────────────────────────────────────────────
 async function switchFramework(fw) {
   _currentFw = fw
-  ;['soc2','iso27001','nist_csf'].forEach(f => {
+  ;['soc2','iso27001','nist_csf','ai_rmf'].forEach(f => {
     const b = document.getElementById(`fw-btn-${f}`)
     if (b) b.className = `btn btn-sm ${f===fw?'btn-primary':'btn-outline'}`
   })
+  const xb = document.getElementById('fw-btn-crossmap')
+  if (xb) xb.className = 'btn btn-sm btn-outline'
+  xb && (xb.style.borderColor='var(--gold)',xb.style.color='#8a6820')
   const res = await get(`/api/controls?framework=${fw}`)
   _controlMap = {}
   if (res.ok) { const rows = await res.json(); rows.forEach(r => { _controlMap[r.control_id] = r }) }
@@ -1606,6 +1611,160 @@ const FRAMEWORKS = {
       {id:'RC.CO',name:'Incident Recovery Communication'},
     ]},
   ]},
+  ai_rmf: { name:'NIST AI RMF', categories:[
+    { id:'GOV', name:'Govern', controls:[
+      {id:'GOV-1.1',name:'Policies, processes, and procedures for AI risk management established'},
+      {id:'GOV-1.2',name:'Accountability mechanisms for AI risk in place'},
+      {id:'GOV-1.3',name:'Organizational teams designated for AI risk management'},
+      {id:'GOV-1.4',name:'Organizational commitment to AI risk culture'},
+      {id:'GOV-1.5',name:'AI risk priorities and tolerances documented'},
+      {id:'GOV-1.6',name:'Policies and procedures for AI risk management in place'},
+      {id:'GOV-1.7',name:'Processes for AI system lifecycle management'},
+      {id:'GOV-2.1',name:'Scientific and technical expertise for AI risk identified'},
+      {id:'GOV-2.2',name:'AI risk awareness and training programs in place'},
+      {id:'GOV-3.1',name:'AI risk workforce plans and capabilities established'},
+      {id:'GOV-3.2',name:'Executive accountability for AI risk defined'},
+      {id:'GOV-4.1',name:'Organizational policies guide AI deployment decisions'},
+      {id:'GOV-4.2',name:'Organizational teams follow AI risk policies'},
+      {id:'GOV-5.1',name:'Risk policies address AI supply chain and third parties'},
+      {id:'GOV-5.2',name:'Policies address AI security, privacy, and resilience'},
+      {id:'GOV-6.1',name:'Policies and procedures for AI incident response and disclosure'},
+      {id:'GOV-6.2',name:'Policies for AI performance metrics and monitoring'},
+    ]},
+    { id:'MAP', name:'Map', controls:[
+      {id:'MAP-1.1',name:'AI risk context established and categorized'},
+      {id:'MAP-1.2',name:'Categorization approaches for AI risks documented'},
+      {id:'MAP-1.3',name:'AI system technical and operational characteristics documented'},
+      {id:'MAP-1.4',name:'Risks and benefits of AI system documented'},
+      {id:'MAP-1.5',name:'Organizational risk tolerances applied to AI'},
+      {id:'MAP-1.6',name:'AI risk sources and threat actors documented'},
+      {id:'MAP-2.1',name:'Scientific principles applied to AI system development'},
+      {id:'MAP-2.2',name:'AI system data characteristics and provenance documented'},
+      {id:'MAP-2.3',name:'AI system explainability and interpretability assessed'},
+      {id:'MAP-3.1',name:'Impacts of AI system use on individuals assessed'},
+      {id:'MAP-3.2',name:'Impacts on individual rights and interests documented'},
+      {id:'MAP-3.3',name:'Impacts on groups or communities assessed'},
+      {id:'MAP-3.4',name:'Impacts on third parties and society documented'},
+      {id:'MAP-3.5',name:'End-user and stakeholder feedback incorporated into assessments'},
+      {id:'MAP-4.1',name:'Known AI risks compared to previous deployments'},
+      {id:'MAP-4.2',name:'Risk measurement approaches established for context'},
+      {id:'MAP-5.1',name:'Likelihood and severity of AI risks estimated'},
+      {id:'MAP-5.2',name:'Residual risks and uncertainty estimated'},
+    ]},
+    { id:'MEA', name:'Measure', controls:[
+      {id:'MEA-1.1',name:'AI risk measurement approaches and metrics established'},
+      {id:'MEA-1.2',name:'AI risks identified and prioritized for measurement'},
+      {id:'MEA-1.3',name:'Internal experts identified for AI risk measurement'},
+      {id:'MEA-2.1',name:'Test and evaluation approaches for AI risks documented'},
+      {id:'MEA-2.2',name:'AI system evaluations conducted regularly'},
+      {id:'MEA-2.3',name:'AI system risk evaluated in deployment context'},
+      {id:'MEA-2.4',name:'Feedback incorporated into AI evaluations'},
+      {id:'MEA-2.5',name:'Privacy risk of AI system evaluated'},
+      {id:'MEA-2.6',name:'Risk assessments documented and retained'},
+      {id:'MEA-2.7',name:'AI system risks tracked over time'},
+      {id:'MEA-2.8',name:'Downstream impacts on individuals and society documented'},
+      {id:'MEA-2.9',name:'Risk assessments and findings shared with stakeholders'},
+      {id:'MEA-2.10',name:'Privacy risk from AI inference and data use evaluated'},
+      {id:'MEA-2.11',name:'AI system fairness and harmful bias evaluated'},
+      {id:'MEA-2.12',name:'Environmental impact of AI system measured'},
+      {id:'MEA-2.13',name:'Effectiveness of AI risk management activities measured'},
+      {id:'MEA-3.1',name:'AI risk measurement activities reviewed and updated'},
+      {id:'MEA-3.2',name:'Risk responses informed by measurement metrics'},
+      {id:'MEA-4.1',name:'Performance and reliability metrics track AI risk indicators'},
+      {id:'MEA-4.2',name:'Measurement approaches improve AI risk management over time'},
+    ]},
+    { id:'MGE', name:'Manage', controls:[
+      {id:'MGE-1.1',name:'AI risks prioritized and treated based on assessments'},
+      {id:'MGE-1.2',name:'Negative AI impacts managed and remediated'},
+      {id:'MGE-1.3',name:'Risk responses implemented and tracked'},
+      {id:'MGE-1.4',name:'Risk prioritization approaches documented'},
+      {id:'MGE-2.1',name:'Risk response plans established for AI system risks'},
+      {id:'MGE-2.2',name:'Risk response plans implemented'},
+      {id:'MGE-2.3',name:'AI incidents responded to in a timely manner'},
+      {id:'MGE-2.4',name:'Feedback incorporated into risk response plans'},
+      {id:'MGE-3.1',name:'Risks from AI development and deployment partners managed'},
+      {id:'MGE-3.2',name:'Residual risks from AI system documented'},
+      {id:'MGE-4.1',name:'Residual AI risks evaluated and prioritized for treatment'},
+      {id:'MGE-4.2',name:'Risk acceptance decisions documented and reviewed'},
+    ]},
+  ]},
+}
+
+// ── CROSSMAP ──────────────────────────────────────────────────────────────
+function getControlName(fw, id) {
+  for (const cat of (FRAMEWORKS[fw]?.categories||[])) {
+    const ctrl = cat.controls.find(c=>c.id===id)
+    if (ctrl) return ctrl.name
+  }
+  return id
+}
+
+const CROSSMAP_CLUSTERS = [
+  { name:'Governance & Policy',      soc2:['CC1.1','CC1.2','CC1.3','CC5.3'],         iso27001:['A.5.1','A.5.4','A.5.36'],                          nist_csf:['GV.PO','GV.RR','GV.OV'],           ai_rmf:['GOV-1.1','GOV-1.6','GOV-1.7','GOV-4.1','GOV-4.2'] },
+  { name:'Risk Assessment',          soc2:['CC3.1','CC3.2','CC3.3','CC3.4'],          iso27001:['A.5.8'],                                            nist_csf:['ID.RA','GV.RM'],                    ai_rmf:['MAP-1.4','MAP-1.5','MAP-4.1','MAP-4.2','MAP-5.1','MAP-5.2'] },
+  { name:'Access Control',           soc2:['CC6.1','CC6.2','CC6.3','CC6.5','CC6.6','CC6.7'], iso27001:['A.5.15','A.5.16','A.5.17','A.5.18','A.8.2','A.8.3','A.8.5'], nist_csf:['PR.AA'], ai_rmf:['GOV-5.2'] },
+  { name:'Incident Management',      soc2:['CC7.4','CC7.5'],                          iso27001:['A.5.24','A.5.25','A.5.26','A.5.27','A.5.28'],       nist_csf:['RS.MA','RS.AN','RS.CO','RS.MI','RC.RP','RC.CO'], ai_rmf:['GOV-6.1','MGE-1.3','MGE-2.3','MGE-2.4'] },
+  { name:'Monitoring & Detection',   soc2:['CC4.1','CC4.2','CC7.1','CC7.2','CC7.3'], iso27001:['A.8.7','A.8.8','A.8.15','A.8.16'],                  nist_csf:['DE.CM','DE.AE'],                    ai_rmf:['MEA-2.1','MEA-2.2','MEA-4.1','GOV-6.2'] },
+  { name:'Asset & Data Management',  soc2:['CC6.4','CC6.8'],                         iso27001:['A.5.9','A.5.10','A.5.11','A.5.12','A.5.13','A.8.10','A.8.11','A.8.12'], nist_csf:['ID.AM','PR.DS'], ai_rmf:['MAP-1.1','MAP-3.1','MEA-2.8'] },
+  { name:'Vendor & Supply Chain',    soc2:['CC9.2'],                                 iso27001:['A.5.19','A.5.20','A.5.21','A.5.22','A.5.23'],       nist_csf:['GV.SC'],                            ai_rmf:['GOV-5.1','MGE-3.1','MAP-3.4'] },
+  { name:'Training & Awareness',     soc2:['CC1.4'],                                 iso27001:['A.6.3'],                                            nist_csf:['PR.AT'],                            ai_rmf:['GOV-2.2','GOV-3.1'] },
+  { name:'Privacy & Data Protection',soc2:['CC6.8'],                                 iso27001:['A.5.34','A.8.11','A.8.12'],                         nist_csf:['PR.DS'],                            ai_rmf:['MEA-2.5','MEA-2.10','GOV-5.2','MAP-3.2'] },
+  { name:'Cryptography',             soc2:['CC6.8'],                                 iso27001:['A.8.24'],                                           nist_csf:['PR.DS'],                            ai_rmf:['GOV-5.2'] },
+  { name:'Change Management',        soc2:['CC8.1'],                                 iso27001:['A.8.32'],                                           nist_csf:['PR.PS'],                            ai_rmf:[] },
+  { name:'Business Continuity',      soc2:['CC9.1'],                                 iso27001:['A.5.29','A.5.30'],                                  nist_csf:['PR.IR','RC.RP'],                    ai_rmf:['MGE-3.2','MGE-4.1'] },
+  { name:'Human Resources Security', soc2:['CC1.4','CC1.5'],                         iso27001:['A.6.1','A.6.2','A.6.4','A.6.5','A.6.6'],           nist_csf:['PR.AT','GV.RR'],                    ai_rmf:['GOV-2.2','GOV-3.1','GOV-3.2'] },
+  { name:'Secure Development',       soc2:['CC8.1'],                                 iso27001:['A.8.25','A.8.26','A.8.27','A.8.28','A.8.29','A.8.30','A.8.31'], nist_csf:['PR.PS'],          ai_rmf:['MAP-2.1','MAP-2.2','MEA-2.1'] },
+  { name:'AI Transparency',          soc2:['CC2.3'],                                 iso27001:[],                                                   nist_csf:['GV.OC'],                            ai_rmf:['MAP-2.3','MAP-3.4','MEA-2.9','GOV-1.4'] },
+  { name:'AI Fairness & Bias',       soc2:[],                                        iso27001:[],                                                   nist_csf:[],                                   ai_rmf:['MEA-2.11','MAP-3.3','MAP-3.2','MGE-1.2'] },
+  { name:'AI Risk Measurement',      soc2:['CC3.2','CC4.1'],                         iso27001:['A.5.8'],                                            nist_csf:['ID.RA','GV.RM'],                    ai_rmf:['MEA-1.1','MEA-1.2','MEA-2.3','MEA-2.6','MEA-4.1','MEA-4.2'] },
+  { name:'Physical Security',        soc2:['CC6.4'],                                 iso27001:['A.7.1','A.7.2','A.7.3','A.7.4','A.7.5','A.7.6'],  nist_csf:[],                                   ai_rmf:[] },
+]
+
+async function showCrossmap() {
+  const xb = document.getElementById('fw-btn-crossmap')
+  if (xb) { xb.className='btn btn-sm btn-primary'; xb.style.borderColor=''; xb.style.color='' }
+  ;['soc2','iso27001','nist_csf','ai_rmf'].forEach(f=>{const b=document.getElementById(`fw-btn-${f}`);if(b)b.className='btn btn-sm btn-outline'})
+
+  const res = await get('/api/controls')
+  const allMap = {}
+  if (res.ok) { const rows = await res.json(); rows.forEach(r => { allMap[`${r.framework}:${r.control_id}`] = r }) }
+
+  const totalAll = Object.values(FRAMEWORKS).reduce((s,fw)=>s+fw.categories.reduce((cs,c)=>cs+c.controls.length,0),0)
+  const doneAll  = Object.values(allMap).filter(r=>r.status==='implemented').length
+  const pctAll   = totalAll ? Math.round(doneAll/totalAll*100) : 0
+  const pb = document.getElementById('fw-prog-bar'); if (pb) pb.style.width=`${pctAll}%`
+  const pt = document.getElementById('fw-prog-text'); if (pt) pt.textContent=`${doneAll}/${totalAll} controls implemented across all frameworks (${pctAll}%)`
+
+  const FW_LABEL = {soc2:'SOC 2',iso27001:'ISO 27001',nist_csf:'NIST CSF',ai_rmf:'AI RMF'}
+  const ct = document.getElementById('ctrl-table')
+  if (!ct) return
+  ct.innerHTML = CROSSMAP_CLUSTERS.map(cluster => {
+    const rows = ['soc2','iso27001','nist_csf','ai_rmf']
+      .filter(fw => cluster[fw]?.length > 0)
+      .map(fw => {
+        const ids = cluster[fw]
+        const tags = ids.map(id => {
+          const st = allMap[`${fw}:${id}`]?.status
+          const bg = st==='implemented'?'rgba(11,122,99,.15)':st==='in_progress'?'rgba(200,169,110,.2)':st==='na'?'rgba(14,31,61,.05)':'rgba(14,31,61,.07)'
+          const col= st==='implemented'?'var(--teal)':st==='in_progress'?'#8a6820':st==='na'?'rgba(14,31,61,.3)':'var(--muted)'
+          const name=escHtml(getControlName(fw,id))
+          return `<span onclick="goToControl('${fw}','${escJs(id)}')" title="${name}" style="display:inline-block;margin:.15rem .2rem .15rem 0;font-family:'DM Mono',monospace;font-size:.72rem;padding:.2rem .45rem;background:${bg};color:${col};cursor:pointer;border:1px solid rgba(14,31,61,.1)">${escHtml(id)}</span>`
+        }).join('')
+        return `<div style="font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted);white-space:nowrap;padding:.2rem 0;min-width:80px">${FW_LABEL[fw]}</div><div style="padding:.15rem 0">${tags}</div>`
+      }).join('')
+    if (!rows) return ''
+    return `<div style="background:var(--white);border:1px solid rgba(14,31,61,.08);margin-bottom:.75rem;padding:1rem 1.5rem">
+      <div style="font-size:.85rem;font-weight:600;color:var(--navy);margin-bottom:.65rem">${cluster.name}</div>
+      <div style="display:grid;grid-template-columns:80px 1fr;gap:.25rem .75rem;align-items:start">${rows}</div>
+    </div>`
+  }).join('')
+}
+
+async function goToControl(fw, ctrlId) {
+  await switchFramework(fw)
+  await new Promise(r=>setTimeout(r,80))
+  const row = document.querySelector(`[data-ctrl-id="${CSS.escape(ctrlId)}"]`)
+  if (row) { row.style.background='rgba(11,122,99,.08)'; row.scrollIntoView({behavior:'smooth',block:'center'}); setTimeout(()=>row.style.background='',2000) }
 }
 
 // ── BOOT ───────────────────────────────────────────────────────────────────
