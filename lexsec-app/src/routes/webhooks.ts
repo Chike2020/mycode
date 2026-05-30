@@ -19,13 +19,13 @@ webhookRoutes.post('/stripe', async (c) => {
     return c.json({ error: 'Webhook signature verification failed' }, 400)
   }
 
-  const obj     = event.data.object as Record<string, unknown>
+  const obj     = event.data.object as unknown as Record<string, unknown>
   const orgId   = (obj.metadata as Record<string, string> | undefined)?.org_id
   const subId   = (obj as { id?: string }).id
 
   switch (event.type) {
     case 'checkout.session.completed': {
-      const session = obj as Stripe.Checkout.Session
+      const session = obj as unknown as Stripe.Checkout.Session
       if (session.subscription && orgId) {
         await c.env.DB.prepare(
           'UPDATE organizations SET stripe_subscription_id = ?, plan = ?, plan_status = ? WHERE id = ?'
@@ -35,7 +35,7 @@ webhookRoutes.post('/stripe', async (c) => {
     }
 
     case 'customer.subscription.updated': {
-      const sub  = obj as Stripe.Subscription
+      const sub  = obj as unknown as Stripe.Subscription
       const plan = (sub.items.data[0]?.price?.metadata?.plan as string | undefined) ?? 'pro'
       await c.env.DB.prepare(
         'UPDATE organizations SET plan = ?, plan_status = ? WHERE stripe_subscription_id = ?'
@@ -51,7 +51,7 @@ webhookRoutes.post('/stripe', async (c) => {
     }
 
     case 'invoice.payment_failed': {
-      const invoice = obj as Stripe.Invoice
+      const invoice = obj as unknown as Stripe.Invoice
       if (invoice.subscription) {
         await c.env.DB.prepare(
           "UPDATE organizations SET plan_status = 'past_due' WHERE stripe_subscription_id = ?"
@@ -61,7 +61,7 @@ webhookRoutes.post('/stripe', async (c) => {
     }
 
     case 'invoice.payment_succeeded': {
-      const invoice = obj as Stripe.Invoice
+      const invoice = obj as unknown as Stripe.Invoice
       if (invoice.subscription) {
         await c.env.DB.prepare(
           "UPDATE organizations SET plan_status = 'active' WHERE stripe_subscription_id = ?"

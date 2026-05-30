@@ -62,8 +62,8 @@ billingRoutes.post(
       customer:    customerId,
       mode:        'subscription',
       line_items:  [{ price: priceId, quantity: 1 }],
-      success_url: `${c.env.FRONTEND_URL}/settings/billing?success=true`,
-      cancel_url:  `${c.env.FRONTEND_URL}/settings/billing`,
+      success_url: `${c.env.FRONTEND_URL}/app.html#billing?success=true`,
+      cancel_url:  `${c.env.FRONTEND_URL}/app.html#billing`,
       metadata:    { org_id: orgId },
       subscription_data: { trial_period_days: 14, metadata: { org_id: orgId } },
     })
@@ -83,7 +83,7 @@ billingRoutes.post('/portal', async (c) => {
   const stripe  = new Stripe(c.env.STRIPE_SECRET_KEY)
   const session = await stripe.billingPortal.sessions.create({
     customer:   org.stripe_customer_id,
-    return_url: `${c.env.FRONTEND_URL}/settings/billing`,
+    return_url: `${c.env.FRONTEND_URL}/app.html#billing`,
   })
   return c.json({ url: session.url })
 })

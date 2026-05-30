@@ -12,8 +12,31 @@ const COOKIE_OPTS = {
   httpOnly: true,
   secure: true,
   sameSite: 'Lax' as const,
-  maxAge: 60 * 60 * 24 * 7, // 7 days
+  maxAge: 60 * 60 * 24 * 7,
   path: '/',
+}
+
+// 10 failed attempts per email or 20 per IP within 15 minutes triggers lockout
+async function isRateLimited(db: D1Database, email: string, ip: string): Promise<boolean> {
+  const [byEmail, byIp] = await Promise.all([
+    db.prepare(
+      "SELECT COUNT(*) as c FROM login_attempts WHERE email = ? AND success = 0 AND created_at > datetime('now', '-15 minutes')"
+    ).bind(email).first<{ c: number }>(),
+    db.prepare(
+      "SELECT COUNT(*) as c FROM login_attempts WHERE ip = ? AND success = 0 AND created_at > datetime('now', '-15 minutes')"
+    ).bind(ip).first<{ c: number }>(),
+  ])
+  return (byEmail?.c ?? 0) >= 10 || (byIp?.c ?? 0) >= 20
+}
+
+async function recordAttempt(db: D1Database, email: string, ip: string, success: boolean) {
+  await db.prepare('INSERT INTO login_attempts (id, email, ip, success) VALUES (?, ?, ?, ?)')
+    .bind(generateId(), email, ip, success ? 1 : 0).run()
+}
+
+async function pruneOldAttempts(db: D1Database) {
+  // Keep the table small — delete entries older than 1 hour
+  await db.prepare("DELETE FROM login_attempts WHERE created_at < datetime('now', '-1 hour')").run()
 }
 
 authRoutes.post(
@@ -69,15 +92,33 @@ authRoutes.post(
   })),
   async (c) => {
     const { email, password } = c.req.valid('json')
+    const ip = c.req.header('CF-Connecting-IP') ?? c.req.header('X-Forwarded-For') ?? 'unknown'
+    const lowerEmail = email.toLowerCase()
+
+    // Prune old attempts opportunistically (fire-and-forget)
+    c.executionCtx.waitUntil(pruneOldAttempts(c.env.DB))
+
+    if (await isRateLimited(c.env.DB, lowerEmail, ip)) {
+      return c.json({ error: 'Too many failed attempts — try again in 15 minutes' }, 429)
+    }
 
     const user = await c.env.DB
       .prepare('SELECT id, email, password_hash, full_name FROM users WHERE email = ?')
-      .bind(email.toLowerCase())
+      .bind(lowerEmail)
       .first<Pick<User, 'id' | 'email' | 'full_name'> & { password_hash: string }>()
 
     // Constant-time check — always run verifyPassword to prevent timing attacks
     const valid = user ? await verifyPassword(password, user.password_hash) : await verifyPassword(password, 'pbkdf2:00:00')
-    if (!user || !valid) return c.json({ error: 'Invalid email or password' }, 401)
+
+    if (!user || !valid) {
+      c.executionCtx.waitUntil(recordAttempt(c.env.DB, lowerEmail, ip, false))
+      return c.json({ error: 'Invalid email or password' }, 401)
+    }
+
+    // Clear failed attempts on success
+    c.executionCtx.waitUntil(
+      c.env.DB.prepare('DELETE FROM login_attempts WHERE email = ?').bind(lowerEmail).run()
+    )
 
     const membership = await c.env.DB
       .prepare('SELECT org_id, role FROM org_members WHERE user_id = ? ORDER BY joined_at LIMIT 1')
