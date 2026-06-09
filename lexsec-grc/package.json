@@ -14,7 +14,6 @@
   "dependencies": {
     "@hono/zod-validator": "^0.4.3",
     "hono": "^4.6.0",
-    "stripe": "^16.0.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
