@@ -2,7 +2,7 @@ name = "lexsec-advisory"
 compatibility_date = "2026-05-26"
 
 routes = [
-  { pattern = "lexsecadvisory.com/*", custom_domain = true }
+  { pattern = "lexsecadvisory.com", custom_domain = true }
 ]
 
 [assets]
