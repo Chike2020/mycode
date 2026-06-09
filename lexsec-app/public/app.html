@@ -44,13 +44,6 @@ nav{flex:1;padding:.75rem 0;overflow-y:auto}
   color:rgba(255,255,255,.25);text-transform:uppercase;
   padding:.5rem 1.25rem .25rem;margin-top:.5rem;
 }
-.sb-upgrade{margin:0 .75rem .75rem;border:1px solid var(--line);padding:1rem;background:rgba(200,169,110,.06)}
-.sb-upgrade p{font-size:.75rem;color:rgba(255,255,255,.5);margin-bottom:.6rem;line-height:1.5}
-.sb-upgrade button{
-  width:100%;padding:.5rem;background:var(--gold);color:var(--navy);
-  font-size:.72rem;font-weight:500;letter-spacing:.06em;text-transform:uppercase;
-  border:none;cursor:pointer;font-family:'DM Sans',sans-serif;
-}
 .sb-user{
   padding:1rem 1.25rem;border-top:1px solid var(--line);
   display:flex;align-items:center;gap:.75rem;
@@ -218,7 +211,7 @@ tr:hover td{background:rgba(11,122,99,.03)}
 /* ── TABLET: icon-only sidebar ── */
 @media(min-width:601px) and (max-width:900px){
   #sidebar{width:60px}
-  .sb-brand,.nav-item span,.nav-section,.sb-upgrade,.sb-user-info,.sb-logout{display:none}
+  .sb-brand,.nav-item span,.nav-section,.sb-user-info,.sb-logout{display:none}
   .nav-item{justify-content:center;padding:.75rem}
   #main{margin-left:60px}
 }
@@ -291,10 +284,6 @@ tr:hover td{background:rgba(11,122,99,.03)}
     <div class="nav-item" onclick="nav('billing')"><span class="nav-icon">💳</span><span>Billing</span></div>
     <div class="nav-item" onclick="nav('settings')"><span class="nav-icon">⚙</span><span>Settings</span></div>
   </nav>
-  <div class="sb-upgrade" id="sb-upgrade" style="display:none">
-    <p>Upgrade to Pro to unlock full GRC suite.</p>
-    <button onclick="upgradePro()">Upgrade — $299/mo</button>
-  </div>
   <div class="sb-user">
     <div class="sb-avatar" id="user-avatar">?</div>
     <div class="sb-user-info">
@@ -352,7 +341,6 @@ async function init() {
     document.getElementById('user-role').textContent = S.currentOrg?.role || ''
     document.getElementById('topbar-org').textContent = S.currentOrg?.name || ''
 
-    if (S.currentOrg?.plan === 'free') document.getElementById('sb-upgrade').style.display = ''
 
     const hash = (location.hash.slice(1) || 'dashboard').split('?')[0]
     await nav(hash)
@@ -473,14 +461,7 @@ const SECTIONS = {
           </table>
         </div>
       </div>
-      ${plan === 'free' ? `
-      <div class="card">
-        <div class="card-header"><div class="card-title" style="color:var(--gold)">Upgrade to Pro</div></div>
-        <div class="card-body">
-          <p style="font-size:.88rem;color:var(--muted);margin-bottom:1.25rem;line-height:1.7">Unlock the full GRC suite: evidence management, risk register, vendor tracking, compliance calendar, and more. 14-day free trial included.</p>
-          <button class="btn btn-gold" onclick="upgradePro()">Start 14-day free trial — $299/mo</button>
-        </div>
-      </div>` : ''}
+      ${''/* upgrade prompt removed — all features free */}
     `)
   },
 
@@ -914,43 +895,31 @@ const SECTIONS = {
 
   // BILLING
   async billing() {
-    const res = await get('/api/billing/subscription')
-    const sub = res.ok ? await res.json() : {}
-    const plansRes = await get('/api/billing/plans')
-    const plans = plansRes.ok ? await plansRes.json() : {}
-    const success = location.hash.includes('success=true')
-
     setContent(`
-      ${success ? `<div style="background:rgba(11,122,99,.1);border:1px solid rgba(11,122,99,.3);color:var(--teal);padding:.9rem 1.25rem;margin-bottom:1.5rem;font-size:.88rem">
-        ✓ Your subscription is active. Welcome to LexSec Pro — your 14-day free trial has started.
-      </div>` : ''}
-      <div class="card" style="margin-bottom:2rem">
-        <div class="card-header"><div class="card-title">Current Plan</div></div>
+      <div class="card" style="max-width:560px;margin:0 auto">
+        <div class="card-header"><div class="card-title">Plan &amp; Billing</div></div>
         <div class="card-body">
-          <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem">
-            <span style="font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:700;color:var(--navy)">${(sub.plan||'free').charAt(0).toUpperCase()+(sub.plan||'free').slice(1)}</span>
-            <span class="badge badge-${sub.plan_status||'active'}">${sub.plan_status||'active'}</span>
+          <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.25rem">
+            <span style="font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:700;color:var(--navy)">Full Access</span>
+            <span class="badge badge-active">active</span>
           </div>
-          ${sub.plan !== 'free' ? `<button class="btn btn-outline btn-sm" onclick="openPortal()">Manage billing →</button>` : ''}
+          <p style="font-size:.88rem;color:var(--muted);line-height:1.6;margin-bottom:1.25rem">
+            All GRC modules are included — Evidence Management, Risk Register, Vendor Management,
+            Compliance Calendar, Policies, Incidents, Asset Inventory, Framework Controls,
+            Audit Log, Snapshots, and Team Management.
+          </p>
+          <ul style="font-size:.85rem;color:var(--muted);line-height:2;padding-left:1.25rem;margin-bottom:1.5rem">
+            <li>SOC 2, ISO 27001:2022, NIST CSF 2.0, NIST AI RMF</li>
+            <li>Unlimited users and organizations</li>
+            <li>10 MB per file · 200 MB per organization</li>
+            <li>Evidence deduplication and cross-control mapping</li>
+            <li>Compliance score dashboard with letter grade</li>
+            <li>CSV audit log export</li>
+          </ul>
+          <p style="font-size:.8rem;color:var(--muted)">
+            Questions? Contact us at <a href="mailto:info@lexsecadvisory.com" style="color:var(--teal)">info@lexsecadvisory.com</a>
+          </p>
         </div>
-      </div>
-      <div class="plan-grid">
-        ${Object.entries(plans).map(([key, p]) => `
-          <div class="plan-card ${(sub.plan||'free')===key?'current':''}">
-            ${(sub.plan||'free')===key ? '<div class="plan-badge">Current plan</div>' : ''}
-            <div class="plan-name">${p.name}</div>
-            <div class="plan-price">${p.price === 0 ? 'Free' : p.price === null ? 'Custom' : `$${p.price}<span>/mo</span>`}</div>
-            <ul class="plan-features">
-              ${(p.features||[]).map(f => `<li>${f}</li>`).join('')}
-            </ul>
-            ${key !== 'free' && (sub.plan||'free') !== key
-              ? `<button class="btn btn-${key==='pro'?'primary':'gold'}" style="width:100%" onclick="checkout('${key}')">
-                  ${key==='enterprise'?'Contact us':'Start free trial'}
-                </button>`
-              : (sub.plan||'free') === key && key !== 'free'
-                ? `<button class="btn btn-outline" style="width:100%" onclick="openPortal()">Manage</button>`
-                : key === 'free' ? `<button class="btn" style="width:100%;background:var(--warm);color:var(--muted);cursor:default">Current</button>` : ''}
-          </div>`).join('')}
       </div>
     `)
   },
@@ -1355,19 +1324,6 @@ async function removeMember(userId, name) {
   if (res.ok) await SECTIONS.team()
 }
 
-async function checkout(plan) {
-  const res  = await post('/api/billing/checkout', { plan })
-  const data = await res.json()
-  if (data.url) location.href = data.url
-}
-
-async function openPortal() {
-  const res  = await post('/api/billing/portal', {})
-  const data = await res.json()
-  if (data.url) location.href = data.url
-}
-
-async function upgradePro() { await nav('billing') }
 
 async function logout() {
   await post('/api/auth/logout', {})
