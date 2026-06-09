@@ -39,6 +39,9 @@ nav{flex:1;padding:.75rem 0;overflow-y:auto}
 .nav-item.active{background:rgba(11,122,99,.15);color:var(--white);border-left-color:var(--teal)}
 .nav-icon{width:16px;text-align:center;flex-shrink:0;opacity:.7}
 .nav-item.active .nav-icon{opacity:1}
+.nav-item-pro{color:var(--gold)!important;border-left-color:rgba(200,169,110,.4)!important}
+.nav-item-pro:hover{background:rgba(200,169,110,.08)!important}
+.nav-item-pro .nav-icon{opacity:1!important}
 .nav-section{
   font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.1em;
   color:rgba(255,255,255,.25);text-transform:uppercase;
@@ -278,6 +281,8 @@ tr:hover td{background:rgba(11,122,99,.03)}
     <div class="nav-item" onclick="nav('assets')"><span class="nav-icon">🗂</span><span>Assets</span></div>
     <div class="nav-item" onclick="nav('vendors')"><span class="nav-icon">🔗</span><span>Vendors</span></div>
     <div class="nav-item" onclick="nav('calendar')"><span class="nav-icon">📅</span><span>Calendar</span></div>
+    <div class="nav-section">VeriLink Pro</div>
+    <div class="nav-item nav-item-pro" onclick="nav('verilink')"><span class="nav-icon">⚡</span><span>VeriLink</span></div>
     <div class="nav-section">Administration</div>
     <div class="nav-item" onclick="nav('audit')"><span class="nav-icon">📝</span><span>Audit Log</span></div>
     <div class="nav-item" onclick="nav('team')"><span class="nav-icon">👥</span><span>Team</span></div>
@@ -488,9 +493,10 @@ const SECTIONS = {
             <option value="iso27001">ISO 27001</option>
             <option value="nist_csf">NIST CSF 2.0</option>
             <option value="ai_rmf">AI RMF</option>
+            <option value="sp800_53">NIST SP 800-53 Rev 5 / FedRAMP</option>
           </select>
           <label>Control ID</label>
-          <input type="text" id="ev-ctrl" placeholder="e.g. CC6.1 / A.5.15 / PR.AA">
+          <input type="text" id="ev-ctrl" placeholder="e.g. CC6.1 / A.5.15 / PR.AA / AC-2">
           <label>Owner</label>
           <input type="text" id="ev-owner" placeholder="Responsible team or person">
           <label>Collection Date</label>
@@ -512,9 +518,10 @@ const SECTIONS = {
             <option value="iso27001">ISO 27001</option>
             <option value="nist_csf">NIST CSF 2.0</option>
             <option value="ai_rmf">AI RMF</option>
+            <option value="sp800_53">NIST SP 800-53 Rev 5 / FedRAMP</option>
           </select>
           <label>Control ID</label>
-          <input type="text" id="ev-map-ctrl" placeholder="e.g. CC6.1 / A.5.15 / PR.AA">
+          <input type="text" id="ev-map-ctrl" placeholder="e.g. CC6.1 / A.5.15 / PR.AA / AC-2">
           <input type="hidden" id="ev-map-evidence-id">
           <div class="modal-actions">
             <button class="btn btn-outline btn-sm" onclick="document.getElementById('ev-map-modal').style.display='none'">Cancel</button>
@@ -896,29 +903,90 @@ const SECTIONS = {
   // BILLING
   async billing() {
     setContent(`
-      <div class="card" style="max-width:560px;margin:0 auto">
-        <div class="card-header"><div class="card-title">Plan &amp; Billing</div></div>
-        <div class="card-body">
-          <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.25rem">
-            <span style="font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:700;color:var(--navy)">Full Access</span>
-            <span class="badge badge-active">active</span>
+      <div style="max-width:860px;margin:0 auto">
+        <div style="font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:var(--navy);margin-bottom:.35rem">Plans</div>
+        <p style="font-size:.85rem;color:var(--muted);margin-bottom:2rem">LexSec Advisory Platform is free for all GRC modules. Upgrade to Pro to unlock VeriLink — automated environment assessment, gap analysis, and regulatory translation.</p>
+        <div class="plan-grid">
+          <div class="plan-card current">
+            <div class="plan-badge">Current plan</div>
+            <div class="plan-name">Advisory GRC</div>
+            <div class="plan-price">Free</div>
+            <ul class="plan-features">
+              <li>SOC 2 · ISO 27001 · NIST CSF · AI RMF · SP 800-53</li>
+              <li>Evidence management with deduplication</li>
+              <li>Risk register, vendor management, incidents</li>
+              <li>Compliance calendar and policy library</li>
+              <li>Asset inventory and audit log</li>
+              <li>Framework crossmap across all 5 frameworks</li>
+              <li>Compliance score dashboard</li>
+              <li>Unlimited users</li>
+            </ul>
+            <button class="btn" style="width:100%;background:var(--warm);color:var(--muted);cursor:default">Current plan</button>
           </div>
-          <p style="font-size:.88rem;color:var(--muted);line-height:1.6;margin-bottom:1.25rem">
-            All GRC modules are included — Evidence Management, Risk Register, Vendor Management,
-            Compliance Calendar, Policies, Incidents, Asset Inventory, Framework Controls,
-            Audit Log, Snapshots, and Team Management.
-          </p>
-          <ul style="font-size:.85rem;color:var(--muted);line-height:2;padding-left:1.25rem;margin-bottom:1.5rem">
-            <li>SOC 2, ISO 27001:2022, NIST CSF 2.0, NIST AI RMF</li>
-            <li>Unlimited users and organizations</li>
-            <li>10 MB per file · 200 MB per organization</li>
-            <li>Evidence deduplication and cross-control mapping</li>
-            <li>Compliance score dashboard with letter grade</li>
-            <li>CSV audit log export</li>
-          </ul>
-          <p style="font-size:.8rem;color:var(--muted)">
-            Questions? Contact us at <a href="mailto:info@lexsecadvisory.com" style="color:var(--teal)">info@lexsecadvisory.com</a>
-          </p>
+          <div class="plan-card" style="border-color:var(--gold)">
+            <div class="plan-badge" style="background:var(--gold);color:var(--navy)">Pro</div>
+            <div class="plan-name" style="color:var(--gold)">VeriLink Pro</div>
+            <div class="plan-price" style="color:var(--navy)">Custom<span> pricing</span></div>
+            <ul class="plan-features">
+              <li>Everything in Advisory GRC</li>
+              <li>⚡ Automated AWS environment assessment</li>
+              <li>⚡ CloudTrail · S3 · IAM · KMS connector</li>
+              <li>⚡ Regulatory → engineering translation engine</li>
+              <li>⚡ HIPAA gap analysis with JD+CISSP interpretation</li>
+              <li>⚡ Tamper-proof evidence vault (S3 Object Lock + OSCAL)</li>
+              <li>⚡ Findings router with inline engineering specs</li>
+              <li>⚡ FedRAMP-ready assessment reports</li>
+            </ul>
+            <a href="mailto:info@lexsecadvisory.com?subject=VeriLink%20Pro%20Access" class="btn btn-gold" style="width:100%;text-align:center;display:block;text-decoration:none">Request Pro Access →</a>
+          </div>
+        </div>
+        <p style="font-size:.78rem;color:var(--muted);margin-top:1.5rem;text-align:center">Questions? <a href="mailto:info@lexsecadvisory.com" style="color:var(--teal)">info@lexsecadvisory.com</a></p>
+      </div>
+    `)
+  },
+
+  // VERILINK
+  async verilink() {
+    setContent(`
+      <div style="max-width:760px;margin:0 auto">
+        <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem">
+          <span style="font-size:1.5rem">⚡</span>
+          <div style="font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:var(--navy)">VeriLink</div>
+          <span class="badge" style="background:rgba(200,169,110,.15);color:#8a6820;font-size:.65rem;letter-spacing:.06em">PRO</span>
+        </div>
+        <p style="font-size:.88rem;color:var(--muted);margin-bottom:2rem;line-height:1.7">
+          VeriLink is the automated assessment engine that connects to your cloud environment, evaluates your security architecture against framework requirements, and translates regulatory obligations into actionable engineering tasks.
+        </p>
+        <div class="stat-row" style="margin-bottom:2rem">
+          <div class="card" style="padding:1.25rem">
+            <div style="font-size:1.5rem;margin-bottom:.5rem">🔌</div>
+            <div style="font-size:.85rem;font-weight:600;color:var(--navy);margin-bottom:.35rem">Environment Assessment</div>
+            <div style="font-size:.78rem;color:var(--muted);line-height:1.6">Connects to AWS via STS AssumeRole. Collects CloudTrail, S3 ACLs, IAM policies, and KMS key configurations. No persistent credentials stored.</div>
+          </div>
+          <div class="card" style="padding:1.25rem">
+            <div style="font-size:1.5rem;margin-bottom:.5rem">⚖</div>
+            <div style="font-size:.85rem;font-weight:600;color:var(--navy);margin-bottom:.35rem">Regulatory Translation</div>
+            <div style="font-size:.78rem;color:var(--muted);line-height:1.6">Powered by Claude + JD+CISSP system prompt. Converts HIPAA, FedRAMP, and SOC 2 requirements into plain-language explanations and step-by-step engineering specs.</div>
+          </div>
+          <div class="card" style="padding:1.25rem">
+            <div style="font-size:1.5rem;margin-bottom:.5rem">🔍</div>
+            <div style="font-size:.85rem;font-weight:600;color:var(--navy);margin-bottom:.35rem">Gap Analysis</div>
+            <div style="font-size:.78rem;color:var(--muted);line-height:1.6">Compares your live environment against HIPAA §164.312, NIST SP 800-53, and SOC 2 controls. Surfaces findings with severity, statutory citation, and remediation code.</div>
+          </div>
+          <div class="card" style="padding:1.25rem">
+            <div style="font-size:1.5rem;margin-bottom:.5rem">🔒</div>
+            <div style="font-size:.85rem;font-weight:600;color:var(--navy);margin-bottom:.35rem">Tamper-Proof Vault</div>
+            <div style="font-size:.78rem;color:var(--muted);line-height:1.6">Evidence stored in S3 Object Lock (COMPLIANCE mode, 90-day retention). Every artifact signed with Cosign and exported as OSCAL bundles for auditor delivery.</div>
+          </div>
+        </div>
+        <div class="card" style="border-color:var(--gold);padding:1.5rem">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
+            <div>
+              <div style="font-size:.85rem;font-weight:600;color:var(--navy);margin-bottom:.3rem">Ready to automate your compliance assessments?</div>
+              <div style="font-size:.78rem;color:var(--muted)">VeriLink Pro is available for LexSec Advisory clients. Contact us to discuss access.</div>
+            </div>
+            <a href="mailto:info@lexsecadvisory.com?subject=VeriLink%20Pro%20Access%20Request" class="btn btn-gold" style="text-decoration:none;white-space:nowrap">Request Access →</a>
+          </div>
         </div>
       </div>
     `)
@@ -1036,7 +1104,7 @@ const SECTIONS = {
   // FRAMEWORKS
   async frameworks() {
     _currentFw = _currentFw || 'soc2'
-    const fwLabels = {soc2:'SOC 2',iso27001:'ISO 27001',nist_csf:'NIST CSF 2.0',ai_rmf:'AI RMF'}
+    const fwLabels = {soc2:'SOC 2',iso27001:'ISO 27001',nist_csf:'NIST CSF 2.0',ai_rmf:'AI RMF',sp800_53:'SP 800-53'}
     setContent(`
       <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.5rem">
         ${Object.keys(fwLabels).map(f=>`<button id="fw-btn-${f}" class="btn btn-sm ${f===_currentFw?'btn-primary':'btn-outline'}" onclick="switchFramework('${f}')">${fwLabels[f]}</button>`).join('')}
@@ -1476,7 +1544,7 @@ async function deleteAsset(id) {
 // ── FRAMEWORK ACTIONS ─────────────────────────────────────────────────────
 async function switchFramework(fw) {
   _currentFw = fw
-  ;['soc2','iso27001','nist_csf','ai_rmf'].forEach(f => {
+  ;['soc2','iso27001','nist_csf','ai_rmf','sp800_53'].forEach(f => {
     const b = document.getElementById(`fw-btn-${f}`)
     if (b) b.className = `btn btn-sm ${f===fw?'btn-primary':'btn-outline'}`
   })
@@ -1812,6 +1880,124 @@ const FRAMEWORKS = {
       {id:'MGE-4.2',name:'Risk acceptance decisions documented and reviewed'},
     ]},
   ]},
+  sp800_53: { name:'NIST SP 800-53 Rev 5 / FedRAMP', categories:[
+    { id:'AC', name:'Access Control', controls:[
+      {id:'AC-1',name:'Access Control Policy and Procedures'},
+      {id:'AC-2',name:'Account Management'},
+      {id:'AC-3',name:'Access Enforcement'},
+      {id:'AC-4',name:'Information Flow Enforcement'},
+      {id:'AC-5',name:'Separation of Duties'},
+      {id:'AC-6',name:'Least Privilege'},
+      {id:'AC-7',name:'Unsuccessful Login Attempts'},
+      {id:'AC-11',name:'Device Lock'},
+      {id:'AC-17',name:'Remote Access'},
+      {id:'AC-20',name:'Use of External Systems'},
+    ]},
+    { id:'AT', name:'Awareness and Training', controls:[
+      {id:'AT-1',name:'Awareness and Training Policy and Procedures'},
+      {id:'AT-2',name:'Literacy Training and Awareness'},
+      {id:'AT-3',name:'Role-Based Training'},
+      {id:'AT-4',name:'Training Records'},
+    ]},
+    { id:'AU', name:'Audit and Accountability', controls:[
+      {id:'AU-1',name:'Audit and Accountability Policy and Procedures'},
+      {id:'AU-2',name:'Event Logging'},
+      {id:'AU-3',name:'Content of Audit Records'},
+      {id:'AU-6',name:'Audit Record Review, Analysis, and Reporting'},
+      {id:'AU-9',name:'Protection of Audit Information'},
+      {id:'AU-12',name:'Audit Record Generation'},
+    ]},
+    { id:'CA', name:'Assessment, Authorization, and Monitoring', controls:[
+      {id:'CA-1',name:'Policy and Procedures'},
+      {id:'CA-2',name:'Control Assessments'},
+      {id:'CA-5',name:'Plan of Action and Milestones'},
+      {id:'CA-7',name:'Continuous Monitoring'},
+      {id:'CA-9',name:'Internal System Connections'},
+    ]},
+    { id:'CM', name:'Configuration Management', controls:[
+      {id:'CM-1',name:'Configuration Management Policy and Procedures'},
+      {id:'CM-2',name:'Baseline Configuration'},
+      {id:'CM-3',name:'Configuration Change Control'},
+      {id:'CM-6',name:'Configuration Settings'},
+      {id:'CM-7',name:'Least Functionality'},
+      {id:'CM-8',name:'System Component Inventory'},
+    ]},
+    { id:'CP', name:'Contingency Planning', controls:[
+      {id:'CP-1',name:'Contingency Planning Policy and Procedures'},
+      {id:'CP-2',name:'Contingency Plan'},
+      {id:'CP-3',name:'Contingency Training'},
+      {id:'CP-4',name:'Contingency Plan Testing'},
+      {id:'CP-9',name:'System Backup'},
+      {id:'CP-10',name:'System Recovery and Reconstitution'},
+    ]},
+    { id:'IA', name:'Identification and Authentication', controls:[
+      {id:'IA-1',name:'Policy and Procedures'},
+      {id:'IA-2',name:'Identification and Authentication (Organizational Users)'},
+      {id:'IA-4',name:'Identifier Management'},
+      {id:'IA-5',name:'Authenticator Management'},
+      {id:'IA-7',name:'Cryptographic Module Authentication'},
+      {id:'IA-8',name:'Identification and Authentication (Non-Org Users)'},
+    ]},
+    { id:'IR', name:'Incident Response', controls:[
+      {id:'IR-1',name:'Incident Response Policy and Procedures'},
+      {id:'IR-2',name:'Incident Response Training'},
+      {id:'IR-4',name:'Incident Handling'},
+      {id:'IR-5',name:'Incident Monitoring'},
+      {id:'IR-6',name:'Incident Reporting'},
+      {id:'IR-8',name:'Incident Response Plan'},
+    ]},
+    { id:'MP', name:'Media Protection', controls:[
+      {id:'MP-1',name:'Media Protection Policy and Procedures'},
+      {id:'MP-2',name:'Media Access'},
+      {id:'MP-6',name:'Media Sanitization'},
+      {id:'MP-7',name:'Media Use'},
+    ]},
+    { id:'PS', name:'Personnel Security', controls:[
+      {id:'PS-1',name:'Personnel Security Policy and Procedures'},
+      {id:'PS-2',name:'Position Risk Designation'},
+      {id:'PS-3',name:'Personnel Screening'},
+      {id:'PS-4',name:'Personnel Termination'},
+      {id:'PS-5',name:'Personnel Transfer'},
+      {id:'PS-7',name:'External Personnel Security'},
+    ]},
+    { id:'RA', name:'Risk Assessment', controls:[
+      {id:'RA-1',name:'Risk Assessment Policy and Procedures'},
+      {id:'RA-2',name:'Security Categorization'},
+      {id:'RA-3',name:'Risk Assessment'},
+      {id:'RA-5',name:'Vulnerability Monitoring and Scanning'},
+      {id:'RA-7',name:'Risk Response'},
+    ]},
+    { id:'SA', name:'System and Services Acquisition', controls:[
+      {id:'SA-1',name:'Policy and Procedures'},
+      {id:'SA-4',name:'Acquisition Process'},
+      {id:'SA-8',name:'Security and Privacy Engineering Principles'},
+      {id:'SA-9',name:'External System Services'},
+      {id:'SA-11',name:'Developer Testing and Evaluation'},
+    ]},
+    { id:'SC', name:'System and Communications Protection', controls:[
+      {id:'SC-1',name:'Policy and Procedures'},
+      {id:'SC-5',name:'Denial-of-Service Protection'},
+      {id:'SC-7',name:'Boundary Protection'},
+      {id:'SC-8',name:'Transmission Confidentiality and Integrity'},
+      {id:'SC-12',name:'Cryptographic Key Establishment and Management'},
+      {id:'SC-13',name:'Cryptographic Protection'},
+      {id:'SC-28',name:'Protection of Information at Rest'},
+    ]},
+    { id:'SI', name:'System and Information Integrity', controls:[
+      {id:'SI-1',name:'Policy and Procedures'},
+      {id:'SI-2',name:'Flaw Remediation'},
+      {id:'SI-3',name:'Malicious Code Protection'},
+      {id:'SI-4',name:'System Monitoring'},
+      {id:'SI-5',name:'Security Alerts, Advisories, and Directives'},
+      {id:'SI-7',name:'Software, Firmware, and Information Integrity'},
+    ]},
+    { id:'SR', name:'Supply Chain Risk Management', controls:[
+      {id:'SR-1',name:'Policy and Procedures'},
+      {id:'SR-2',name:'Supply Chain Risk Management Plan'},
+      {id:'SR-3',name:'Supply Chain Controls and Processes'},
+      {id:'SR-6',name:'Supplier Assessments and Reviews'},
+    ]},
+  ]},
 }
 
 // ── CROSSMAP ──────────────────────────────────────────────────────────────
@@ -1824,30 +2010,30 @@ function getControlName(fw, id) {
 }
 
 const CROSSMAP_CLUSTERS = [
-  { name:'Governance & Policy',      soc2:['CC1.1','CC1.2','CC1.3','CC5.3'],         iso27001:['A.5.1','A.5.4','A.5.36'],                          nist_csf:['GV.PO','GV.RR','GV.OV'],           ai_rmf:['GOV-1.1','GOV-1.6','GOV-1.7','GOV-4.1','GOV-4.2'] },
-  { name:'Risk Assessment',          soc2:['CC3.1','CC3.2','CC3.3','CC3.4'],          iso27001:['A.5.8'],                                            nist_csf:['ID.RA','GV.RM'],                    ai_rmf:['MAP-1.4','MAP-1.5','MAP-4.1','MAP-4.2','MAP-5.1','MAP-5.2'] },
-  { name:'Access Control',           soc2:['CC6.1','CC6.2','CC6.3','CC6.5','CC6.6','CC6.7'], iso27001:['A.5.15','A.5.16','A.5.17','A.5.18','A.8.2','A.8.3','A.8.5'], nist_csf:['PR.AA'], ai_rmf:['GOV-5.2'] },
-  { name:'Incident Management',      soc2:['CC7.4','CC7.5'],                          iso27001:['A.5.24','A.5.25','A.5.26','A.5.27','A.5.28'],       nist_csf:['RS.MA','RS.AN','RS.CO','RS.MI','RC.RP','RC.CO'], ai_rmf:['GOV-6.1','MGE-1.3','MGE-2.3','MGE-2.4'] },
-  { name:'Monitoring & Detection',   soc2:['CC4.1','CC4.2','CC7.1','CC7.2','CC7.3'], iso27001:['A.8.7','A.8.8','A.8.15','A.8.16'],                  nist_csf:['DE.CM','DE.AE'],                    ai_rmf:['MEA-2.1','MEA-2.2','MEA-4.1','GOV-6.2'] },
-  { name:'Asset & Data Management',  soc2:['CC6.4','CC6.8'],                         iso27001:['A.5.9','A.5.10','A.5.11','A.5.12','A.5.13','A.8.10','A.8.11','A.8.12'], nist_csf:['ID.AM','PR.DS'], ai_rmf:['MAP-1.1','MAP-3.1','MEA-2.8'] },
-  { name:'Vendor & Supply Chain',    soc2:['CC9.2'],                                 iso27001:['A.5.19','A.5.20','A.5.21','A.5.22','A.5.23'],       nist_csf:['GV.SC'],                            ai_rmf:['GOV-5.1','MGE-3.1','MAP-3.4'] },
-  { name:'Training & Awareness',     soc2:['CC1.4'],                                 iso27001:['A.6.3'],                                            nist_csf:['PR.AT'],                            ai_rmf:['GOV-2.2','GOV-3.1'] },
-  { name:'Privacy & Data Protection',soc2:['CC6.8'],                                 iso27001:['A.5.34','A.8.11','A.8.12'],                         nist_csf:['PR.DS'],                            ai_rmf:['MEA-2.5','MEA-2.10','GOV-5.2','MAP-3.2'] },
-  { name:'Cryptography',             soc2:['CC6.8'],                                 iso27001:['A.8.24'],                                           nist_csf:['PR.DS'],                            ai_rmf:['GOV-5.2'] },
-  { name:'Change Management',        soc2:['CC8.1'],                                 iso27001:['A.8.32'],                                           nist_csf:['PR.PS'],                            ai_rmf:[] },
-  { name:'Business Continuity',      soc2:['CC9.1'],                                 iso27001:['A.5.29','A.5.30'],                                  nist_csf:['PR.IR','RC.RP'],                    ai_rmf:['MGE-3.2','MGE-4.1'] },
-  { name:'Human Resources Security', soc2:['CC1.4','CC1.5'],                         iso27001:['A.6.1','A.6.2','A.6.4','A.6.5','A.6.6'],           nist_csf:['PR.AT','GV.RR'],                    ai_rmf:['GOV-2.2','GOV-3.1','GOV-3.2'] },
-  { name:'Secure Development',       soc2:['CC8.1'],                                 iso27001:['A.8.25','A.8.26','A.8.27','A.8.28','A.8.29','A.8.30','A.8.31'], nist_csf:['PR.PS'],          ai_rmf:['MAP-2.1','MAP-2.2','MEA-2.1'] },
-  { name:'AI Transparency',          soc2:['CC2.3'],                                 iso27001:[],                                                   nist_csf:['GV.OC'],                            ai_rmf:['MAP-2.3','MAP-3.4','MEA-2.9','GOV-1.4'] },
-  { name:'AI Fairness & Bias',       soc2:[],                                        iso27001:[],                                                   nist_csf:[],                                   ai_rmf:['MEA-2.11','MAP-3.3','MAP-3.2','MGE-1.2'] },
-  { name:'AI Risk Measurement',      soc2:['CC3.2','CC4.1'],                         iso27001:['A.5.8'],                                            nist_csf:['ID.RA','GV.RM'],                    ai_rmf:['MEA-1.1','MEA-1.2','MEA-2.3','MEA-2.6','MEA-4.1','MEA-4.2'] },
-  { name:'Physical Security',        soc2:['CC6.4'],                                 iso27001:['A.7.1','A.7.2','A.7.3','A.7.4','A.7.5','A.7.6'],  nist_csf:[],                                   ai_rmf:[] },
+  { name:'Governance & Policy',      soc2:['CC1.1','CC1.2','CC1.3','CC5.3'],         iso27001:['A.5.1','A.5.4','A.5.36'],                          nist_csf:['GV.PO','GV.RR','GV.OV'],           ai_rmf:['GOV-1.1','GOV-1.6','GOV-1.7','GOV-4.1','GOV-4.2'],  sp800_53:['CA-1','RA-1','CA-5'] },
+  { name:'Risk Assessment',          soc2:['CC3.1','CC3.2','CC3.3','CC3.4'],          iso27001:['A.5.8'],                                            nist_csf:['ID.RA','GV.RM'],                    ai_rmf:['MAP-1.4','MAP-1.5','MAP-4.1','MAP-4.2','MAP-5.1','MAP-5.2'], sp800_53:['RA-2','RA-3','RA-5','RA-7','CA-2','CA-7'] },
+  { name:'Access Control',           soc2:['CC6.1','CC6.2','CC6.3','CC6.5','CC6.6','CC6.7'], iso27001:['A.5.15','A.5.16','A.5.17','A.5.18','A.8.2','A.8.3','A.8.5'], nist_csf:['PR.AA'], ai_rmf:['GOV-5.2'], sp800_53:['AC-1','AC-2','AC-3','AC-5','AC-6','IA-1','IA-2','IA-4','IA-5'] },
+  { name:'Incident Management',      soc2:['CC7.4','CC7.5'],                          iso27001:['A.5.24','A.5.25','A.5.26','A.5.27','A.5.28'],       nist_csf:['RS.MA','RS.AN','RS.CO','RS.MI','RC.RP','RC.CO'], ai_rmf:['GOV-6.1','MGE-1.3','MGE-2.3','MGE-2.4'], sp800_53:['IR-1','IR-4','IR-5','IR-6','IR-8'] },
+  { name:'Monitoring & Detection',   soc2:['CC4.1','CC4.2','CC7.1','CC7.2','CC7.3'], iso27001:['A.8.7','A.8.8','A.8.15','A.8.16'],                  nist_csf:['DE.CM','DE.AE'],                    ai_rmf:['MEA-2.1','MEA-2.2','MEA-4.1','GOV-6.2'], sp800_53:['AU-2','AU-6','AU-12','SI-4','CA-7'] },
+  { name:'Asset & Data Management',  soc2:['CC6.4','CC6.8'],                         iso27001:['A.5.9','A.5.10','A.5.11','A.5.12','A.5.13','A.8.10','A.8.11','A.8.12'], nist_csf:['ID.AM','PR.DS'], ai_rmf:['MAP-1.1','MAP-3.1','MEA-2.8'], sp800_53:['CM-8','MP-2','SC-28'] },
+  { name:'Vendor & Supply Chain',    soc2:['CC9.2'],                                 iso27001:['A.5.19','A.5.20','A.5.21','A.5.22','A.5.23'],       nist_csf:['GV.SC'],                            ai_rmf:['GOV-5.1','MGE-3.1','MAP-3.4'], sp800_53:['SA-9','SR-1','SR-2','SR-3','SR-6'] },
+  { name:'Training & Awareness',     soc2:['CC1.4'],                                 iso27001:['A.6.3'],                                            nist_csf:['PR.AT'],                            ai_rmf:['GOV-2.2','GOV-3.1'], sp800_53:['AT-1','AT-2','AT-3'] },
+  { name:'Privacy & Data Protection',soc2:['CC6.8'],                                 iso27001:['A.5.34','A.8.11','A.8.12'],                         nist_csf:['PR.DS'],                            ai_rmf:['MEA-2.5','MEA-2.10','GOV-5.2','MAP-3.2'], sp800_53:['SC-8','SC-28','MP-6'] },
+  { name:'Cryptography',             soc2:['CC6.8'],                                 iso27001:['A.8.24'],                                           nist_csf:['PR.DS'],                            ai_rmf:['GOV-5.2'], sp800_53:['SC-12','SC-13','IA-7'] },
+  { name:'Change Management',        soc2:['CC8.1'],                                 iso27001:['A.8.32'],                                           nist_csf:['PR.PS'],                            ai_rmf:[], sp800_53:['CM-2','CM-3','CM-6','CM-7'] },
+  { name:'Business Continuity',      soc2:['CC9.1'],                                 iso27001:['A.5.29','A.5.30'],                                  nist_csf:['PR.IR','RC.RP'],                    ai_rmf:['MGE-3.2','MGE-4.1'], sp800_53:['CP-2','CP-4','CP-9','CP-10'] },
+  { name:'Human Resources Security', soc2:['CC1.4','CC1.5'],                         iso27001:['A.6.1','A.6.2','A.6.4','A.6.5','A.6.6'],           nist_csf:['PR.AT','GV.RR'],                    ai_rmf:['GOV-2.2','GOV-3.1','GOV-3.2'], sp800_53:['PS-2','PS-3','PS-4','PS-5','PS-7'] },
+  { name:'Secure Development',       soc2:['CC8.1'],                                 iso27001:['A.8.25','A.8.26','A.8.27','A.8.28','A.8.29','A.8.30','A.8.31'], nist_csf:['PR.PS'],          ai_rmf:['MAP-2.1','MAP-2.2','MEA-2.1'], sp800_53:['SA-4','SA-8','SA-11','CM-3'] },
+  { name:'AI Transparency',          soc2:['CC2.3'],                                 iso27001:[],                                                   nist_csf:['GV.OC'],                            ai_rmf:['MAP-2.3','MAP-3.4','MEA-2.9','GOV-1.4'], sp800_53:[] },
+  { name:'AI Fairness & Bias',       soc2:[],                                        iso27001:[],                                                   nist_csf:[],                                   ai_rmf:['MEA-2.11','MAP-3.3','MAP-3.2','MGE-1.2'], sp800_53:[] },
+  { name:'AI Risk Measurement',      soc2:['CC3.2','CC4.1'],                         iso27001:['A.5.8'],                                            nist_csf:['ID.RA','GV.RM'],                    ai_rmf:['MEA-1.1','MEA-1.2','MEA-2.3','MEA-2.6','MEA-4.1','MEA-4.2'], sp800_53:['RA-3','RA-5','CA-7'] },
+  { name:'Physical Security',        soc2:['CC6.4'],                                 iso27001:['A.7.1','A.7.2','A.7.3','A.7.4','A.7.5','A.7.6'],  nist_csf:[],                                   ai_rmf:[], sp800_53:[] },
 ]
 
 async function showCrossmap() {
   const xb = document.getElementById('fw-btn-crossmap')
   if (xb) { xb.className='btn btn-sm btn-primary'; xb.style.borderColor=''; xb.style.color='' }
-  ;['soc2','iso27001','nist_csf','ai_rmf'].forEach(f=>{const b=document.getElementById(`fw-btn-${f}`);if(b)b.className='btn btn-sm btn-outline'})
+  ;['soc2','iso27001','nist_csf','ai_rmf','sp800_53'].forEach(f=>{const b=document.getElementById(`fw-btn-${f}`);if(b)b.className='btn btn-sm btn-outline'})
 
   const res = await get('/api/controls')
   const allMap = {}
@@ -1859,11 +2045,11 @@ async function showCrossmap() {
   const pb = document.getElementById('fw-prog-bar'); if (pb) pb.style.width=`${pctAll}%`
   const pt = document.getElementById('fw-prog-text'); if (pt) pt.textContent=`${doneAll}/${totalAll} controls implemented across all frameworks (${pctAll}%)`
 
-  const FW_LABEL = {soc2:'SOC 2',iso27001:'ISO 27001',nist_csf:'NIST CSF',ai_rmf:'AI RMF'}
+  const FW_LABEL = {soc2:'SOC 2',iso27001:'ISO 27001',nist_csf:'NIST CSF',ai_rmf:'AI RMF',sp800_53:'SP 800-53'}
   const ct = document.getElementById('ctrl-table')
   if (!ct) return
   ct.innerHTML = CROSSMAP_CLUSTERS.map(cluster => {
-    const rows = ['soc2','iso27001','nist_csf','ai_rmf']
+    const rows = ['soc2','iso27001','nist_csf','ai_rmf','sp800_53']
       .filter(fw => cluster[fw]?.length > 0)
       .map(fw => {
         const ids = cluster[fw]
