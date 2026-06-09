@@ -42,6 +42,8 @@ nav{flex:1;padding:.75rem 0;overflow-y:auto}
 .nav-item-pro{color:var(--gold)!important;border-left-color:rgba(200,169,110,.4)!important}
 .nav-item-pro:hover{background:rgba(200,169,110,.08)!important}
 .nav-item-pro .nav-icon{opacity:1!important}
+.nav-item-pro-lock{color:var(--muted)!important}
+.pro-lock{margin-left:auto;font-size:.6rem;color:var(--gold);letter-spacing:.04em;flex-shrink:0}
 .nav-section{
   font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.1em;
   color:rgba(255,255,255,.25);text-transform:uppercase;
@@ -214,7 +216,7 @@ tr:hover td{background:rgba(11,122,99,.03)}
 /* ── TABLET: icon-only sidebar ── */
 @media(min-width:601px) and (max-width:900px){
   #sidebar{width:60px}
-  .sb-brand,.nav-item span,.nav-section,.sb-user-info,.sb-logout{display:none}
+  .sb-brand,.nav-item span,.nav-section,.sb-user-info,.sb-logout,.pro-lock{display:none}
   .nav-item{justify-content:center;padding:.75rem}
   #main{margin-left:60px}
 }
@@ -271,18 +273,18 @@ tr:hover td{background:rgba(11,122,99,.03)}
   <nav>
     <div class="nav-section">Platform</div>
     <div class="nav-item active" onclick="nav('dashboard')"><span class="nav-icon">⬡</span><span>Dashboard</span></div>
-    <div class="nav-section">Governance</div>
-    <div class="nav-item" onclick="nav('policies')"><span class="nav-icon">📄</span><span>Policies</span></div>
-    <div class="nav-item" onclick="nav('frameworks')"><span class="nav-icon">☑</span><span>Frameworks</span></div>
+    <div class="nav-item" onclick="nav('onboarding')"><span class="nav-icon">🚀</span><span>Onboarding</span></div>
     <div class="nav-section">GRC</div>
-    <div class="nav-item" onclick="nav('evidence')"><span class="nav-icon">📋</span><span>Evidence</span></div>
     <div class="nav-item" onclick="nav('risks')"><span class="nav-icon">⚠</span><span>Risk Register</span></div>
+    <div class="nav-item" onclick="nav('frameworks')"><span class="nav-icon">☑</span><span>Frameworks</span></div>
+    <div class="nav-item" onclick="nav('evidence')"><span class="nav-icon">📋</span><span>Evidence</span></div>
     <div class="nav-item" onclick="nav('incidents')"><span class="nav-icon">🚨</span><span>Incidents</span></div>
     <div class="nav-item" onclick="nav('assets')"><span class="nav-icon">🗂</span><span>Assets</span></div>
-    <div class="nav-item" onclick="nav('vendors')"><span class="nav-icon">🔗</span><span>Vendors</span></div>
     <div class="nav-item" onclick="nav('calendar')"><span class="nav-icon">📅</span><span>Calendar</span></div>
-    <div class="nav-section">VeriLink Pro</div>
-    <div class="nav-item nav-item-pro" onclick="nav('verilink')"><span class="nav-icon">⚡</span><span>VeriLink</span></div>
+    <div class="nav-section">Pro Features</div>
+    <div class="nav-item nav-item-pro-lock" onclick="nav('vendors')"><span class="nav-icon">🔗</span><span>TPRM Vendors</span><span class="pro-lock">★</span></div>
+    <div class="nav-item nav-item-pro-lock" onclick="nav('policies')"><span class="nav-icon">📄</span><span>Policy Gen</span><span class="pro-lock">★</span></div>
+    <div class="nav-item nav-item-pro" onclick="nav('verilink')"><span class="nav-icon">⚡</span><span>VeriLink</span><span class="pro-lock">★</span></div>
     <div class="nav-section">Administration</div>
     <div class="nav-item" onclick="nav('audit')"><span class="nav-icon">📝</span><span>Audit Log</span></div>
     <div class="nav-item" onclick="nav('team')"><span class="nav-icon">👥</span><span>Team</span></div>
@@ -355,7 +357,7 @@ async function init() {
 }
 
 // ── ROUTING ────────────────────────────────────────────────────────────────
-const TITLES = { dashboard:'Dashboard', policies:'Policies', frameworks:'Framework Controls', evidence:'Evidence', risks:'Risk Register', incidents:'Incidents', assets:'Asset Inventory', vendors:'Vendors', calendar:'Compliance Calendar', audit:'Audit Log', team:'Team', billing:'Billing', settings:'Settings' }
+const TITLES = { dashboard:'Dashboard', onboarding:'Onboarding', policies:'Policies', frameworks:'Framework Controls', evidence:'Evidence', risks:'Risk Register', incidents:'Incidents', assets:'Asset Inventory', vendors:'Vendors', calendar:'Compliance Calendar', audit:'Audit Log', team:'Team', billing:'Billing', settings:'Settings' }
 
 async function nav(section) {
   S.currentSection = section
@@ -378,6 +380,22 @@ const SECTIONS = {
 
   // DASHBOARD
   async dashboard() {
+    if (!localStorage.getItem('lexsec_onboarding')) {
+      const ob = JSON.parse(localStorage.getItem('lexsec_onboarding_draft') || 'null')
+      if (!ob) {
+        setContent(`<div style="max-width:500px;margin:4rem auto;text-align:center">
+          <div style="font-size:2.5rem;margin-bottom:1rem">🚀</div>
+          <div style="font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;color:var(--navy);margin-bottom:.75rem">Welcome to LexSec Advisory</div>
+          <p style="font-size:.88rem;color:var(--muted);line-height:1.7;margin-bottom:1.5rem">Let's set up your compliance program. A 4-step onboarding will map your frameworks, assess your maturity tier, and show you exactly where to focus first. Takes under five minutes.</p>
+          <div style="display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap">
+            <button class="btn btn-primary" onclick="nav('onboarding')">Start onboarding →</button>
+            <button class="btn btn-outline" onclick="localStorage.setItem('lexsec_onboarding','skip');nav('dashboard')">Skip for now</button>
+          </div>
+        </div>`)
+        return
+      }
+    }
+
     const org  = S.currentOrg
     const plan = org?.plan || 'free'
 
@@ -468,6 +486,37 @@ const SECTIONS = {
       </div>
       ${''/* upgrade prompt removed — all features free */}
     `)
+  },
+
+  // ONBOARDING
+  async onboarding() {
+    const saved = JSON.parse(localStorage.getItem('lexsec_onboarding') || 'null')
+    if (saved && saved !== 'skip') {
+      const maturity = ['Initial','Developing','Defined','Managed'][Math.min(3, Math.floor(saved.maturityScore / 2))]
+      setContent(`
+        <div style="max-width:640px;margin:0 auto">
+          <div style="font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:var(--navy);margin-bottom:.3rem">Organization Profile</div>
+          <p style="font-size:.85rem;color:var(--muted);margin-bottom:1.5rem">Your onboarding is complete. Update your profile below or reset to run through the wizard again.</p>
+          <div class="card" style="margin-bottom:1.25rem">
+            <div class="card-body" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+              <div><div style="font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Organization</div><div style="font-weight:600;color:var(--navy);margin-top:.2rem">${escHtml(saved.orgName||'—')}</div></div>
+              <div><div style="font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Industry</div><div style="font-weight:600;color:var(--navy);margin-top:.2rem">${escHtml(saved.industry||'—')}</div></div>
+              <div><div style="font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Size</div><div style="font-weight:600;color:var(--navy);margin-top:.2rem">${escHtml(saved.size||'—')}</div></div>
+              <div><div style="font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Maturity</div><div style="font-weight:600;color:var(--teal);margin-top:.2rem">${maturity}</div></div>
+            </div>
+          </div>
+          <div class="card" style="margin-bottom:1.5rem">
+            <div class="card-header"><div class="card-title">Frameworks in Scope</div></div>
+            <div class="card-body" style="display:flex;gap:.5rem;flex-wrap:wrap">
+              ${(saved.frameworks||[]).map(f=>`<span class="badge badge-active">${escHtml({soc2:'SOC 2',iso27001:'ISO 27001',nist_csf:'NIST CSF 2.0',hipaa:'HIPAA'}[f]||f)}</span>`).join('')}
+            </div>
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="localStorage.removeItem('lexsec_onboarding');SECTIONS.onboarding()">Reset onboarding wizard</button>
+        </div>
+      `)
+      return
+    }
+    renderOnboardingStep(1, {})
   },
 
   // ── EVIDENCE ──────────────────────────────────────────────────────────────
@@ -1104,7 +1153,7 @@ const SECTIONS = {
   // FRAMEWORKS
   async frameworks() {
     _currentFw = _currentFw || 'soc2'
-    const fwLabels = {soc2:'SOC 2',iso27001:'ISO 27001',nist_csf:'NIST CSF 2.0',ai_rmf:'AI RMF',sp800_53:'SP 800-53'}
+    const fwLabels = {soc2:'SOC 2',iso27001:'ISO 27001',nist_csf:'NIST CSF 2.0',hipaa:'HIPAA',ai_rmf:'AI RMF ★',sp800_53:'SP 800-53 ★'}
     setContent(`
       <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.5rem">
         ${Object.keys(fwLabels).map(f=>`<button id="fw-btn-${f}" class="btn btn-sm ${f===_currentFw?'btn-primary':'btn-outline'}" onclick="switchFramework('${f}')">${fwLabels[f]}</button>`).join('')}
@@ -1544,7 +1593,7 @@ async function deleteAsset(id) {
 // ── FRAMEWORK ACTIONS ─────────────────────────────────────────────────────
 async function switchFramework(fw) {
   _currentFw = fw
-  ;['soc2','iso27001','nist_csf','ai_rmf','sp800_53'].forEach(f => {
+  ;['soc2','iso27001','nist_csf','hipaa','ai_rmf','sp800_53'].forEach(f => {
     const b = document.getElementById(`fw-btn-${f}`)
     if (b) b.className = `btn btn-sm ${f===fw?'btn-primary':'btn-outline'}`
   })
@@ -2033,7 +2082,7 @@ const CROSSMAP_CLUSTERS = [
 async function showCrossmap() {
   const xb = document.getElementById('fw-btn-crossmap')
   if (xb) { xb.className='btn btn-sm btn-primary'; xb.style.borderColor=''; xb.style.color='' }
-  ;['soc2','iso27001','nist_csf','ai_rmf','sp800_53'].forEach(f=>{const b=document.getElementById(`fw-btn-${f}`);if(b)b.className='btn btn-sm btn-outline'})
+  ;['soc2','iso27001','nist_csf','hipaa','ai_rmf','sp800_53'].forEach(f=>{const b=document.getElementById(`fw-btn-${f}`);if(b)b.className='btn btn-sm btn-outline'})
 
   const res = await get('/api/controls')
   const allMap = {}
@@ -2045,11 +2094,11 @@ async function showCrossmap() {
   const pb = document.getElementById('fw-prog-bar'); if (pb) pb.style.width=`${pctAll}%`
   const pt = document.getElementById('fw-prog-text'); if (pt) pt.textContent=`${doneAll}/${totalAll} controls implemented across all frameworks (${pctAll}%)`
 
-  const FW_LABEL = {soc2:'SOC 2',iso27001:'ISO 27001',nist_csf:'NIST CSF',ai_rmf:'AI RMF',sp800_53:'SP 800-53'}
+  const FW_LABEL = {soc2:'SOC 2',iso27001:'ISO 27001',nist_csf:'NIST CSF',hipaa:'HIPAA',ai_rmf:'AI RMF',sp800_53:'SP 800-53'}
   const ct = document.getElementById('ctrl-table')
   if (!ct) return
   ct.innerHTML = CROSSMAP_CLUSTERS.map(cluster => {
-    const rows = ['soc2','iso27001','nist_csf','ai_rmf','sp800_53']
+    const rows = ['soc2','iso27001','nist_csf','hipaa','ai_rmf','sp800_53']
       .filter(fw => cluster[fw]?.length > 0)
       .map(fw => {
         const ids = cluster[fw]
