@@ -1001,46 +1001,11 @@ const SECTIONS = {
   // VERILINK
   async verilink() {
     setContent(`
-      <div style="max-width:760px;margin:0 auto">
-        <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem">
-          <span style="font-size:1.5rem">⚡</span>
-          <div style="font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:var(--navy)">VeriLink</div>
-          <span class="badge" style="background:rgba(200,169,110,.15);color:#8a6820;font-size:.65rem;letter-spacing:.06em">PRO</span>
-        </div>
-        <p style="font-size:.88rem;color:var(--muted);margin-bottom:2rem;line-height:1.7">
-          VeriLink is the automated assessment engine that connects to your cloud environment, evaluates your security architecture against framework requirements, and translates regulatory obligations into actionable engineering tasks.
-        </p>
-        <div class="stat-row" style="margin-bottom:2rem">
-          <div class="card" style="padding:1.25rem">
-            <div style="font-size:1.5rem;margin-bottom:.5rem">🔌</div>
-            <div style="font-size:.85rem;font-weight:600;color:var(--navy);margin-bottom:.35rem">Environment Assessment</div>
-            <div style="font-size:.78rem;color:var(--muted);line-height:1.6">Connects to AWS via STS AssumeRole. Collects CloudTrail, S3 ACLs, IAM policies, and KMS key configurations. No persistent credentials stored.</div>
-          </div>
-          <div class="card" style="padding:1.25rem">
-            <div style="font-size:1.5rem;margin-bottom:.5rem">⚖</div>
-            <div style="font-size:.85rem;font-weight:600;color:var(--navy);margin-bottom:.35rem">Regulatory Translation</div>
-            <div style="font-size:.78rem;color:var(--muted);line-height:1.6">Powered by Claude + JD+CISSP system prompt. Converts HIPAA, FedRAMP, and SOC 2 requirements into plain-language explanations and step-by-step engineering specs.</div>
-          </div>
-          <div class="card" style="padding:1.25rem">
-            <div style="font-size:1.5rem;margin-bottom:.5rem">🔍</div>
-            <div style="font-size:.85rem;font-weight:600;color:var(--navy);margin-bottom:.35rem">Gap Analysis</div>
-            <div style="font-size:.78rem;color:var(--muted);line-height:1.6">Compares your live environment against HIPAA §164.312, NIST SP 800-53, and SOC 2 controls. Surfaces findings with severity, statutory citation, and remediation code.</div>
-          </div>
-          <div class="card" style="padding:1.25rem">
-            <div style="font-size:1.5rem;margin-bottom:.5rem">🔒</div>
-            <div style="font-size:.85rem;font-weight:600;color:var(--navy);margin-bottom:.35rem">Tamper-Proof Vault</div>
-            <div style="font-size:.78rem;color:var(--muted);line-height:1.6">Evidence stored in S3 Object Lock (COMPLIANCE mode, 90-day retention). Every artifact signed with Cosign and exported as OSCAL bundles for auditor delivery.</div>
-          </div>
-        </div>
-        <div class="card" style="border-color:var(--gold);padding:1.5rem">
-          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
-            <div>
-              <div style="font-size:.85rem;font-weight:600;color:var(--navy);margin-bottom:.3rem">Ready to automate your compliance assessments?</div>
-              <div style="font-size:.78rem;color:var(--muted)">VeriLink Pro is available for LexSec Advisory clients. Contact us to discuss access.</div>
-            </div>
-            <a href="mailto:info@lexsecadvisory.com?subject=VeriLink%20Pro%20Access%20Request" class="btn btn-gold" style="text-decoration:none;white-space:nowrap">Request Access →</a>
-          </div>
-        </div>
+      <div class="coming-soon">
+        <div style="font-size:2.5rem;margin-bottom:1rem">⚡</div>
+        <h3>VeriLink — Coming Soon</h3>
+        <p>Automated environment assessment, regulatory translation, and gap analysis. We're building it now.</p>
+        <p style="margin-top:.75rem;font-size:.82rem"><a href="mailto:info@lexsecadvisory.com?subject=VeriLink%20Early%20Access" style="color:var(--teal)">Get notified when it launches →</a></p>
       </div>
     `)
   },
