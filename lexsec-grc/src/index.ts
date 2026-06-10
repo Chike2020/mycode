@@ -15,7 +15,8 @@ import { scoreRoutes }    from './routes/score'
 import { policyRoutes }   from './routes/policies'
 import { incidentRoutes } from './routes/incidents'
 import { assetRoutes }    from './routes/assets'
-import { controlRoutes }  from './routes/controls'
+import { controlRoutes }   from './routes/controls'
+import { waitlistRoutes }  from './routes/waitlist'
 import type { AppType } from './types'
 
 const app = new Hono<AppType>()
@@ -57,6 +58,7 @@ app.route('/api/policies',  policyRoutes)
 app.route('/api/incidents', incidentRoutes)
 app.route('/api/assets',    assetRoutes)
 app.route('/api/controls',  controlRoutes)
+app.route('/api/waitlist',  waitlistRoutes)
 
 // Serve frontend assets for all non-API routes
 app.all('*', (c) => c.env.ASSETS.fetch(c.req.raw))

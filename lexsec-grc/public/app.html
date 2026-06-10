@@ -1001,11 +1001,35 @@ const SECTIONS = {
   // VERILINK
   async verilink() {
     setContent(`
-      <div class="coming-soon">
+      <div style="max-width:480px;margin:3rem auto;text-align:center">
         <div style="font-size:2.5rem;margin-bottom:1rem">⚡</div>
-        <h3>VeriLink — Coming Soon</h3>
-        <p>Automated environment assessment, regulatory translation, and gap analysis. We're building it now.</p>
-        <p style="margin-top:.75rem;font-size:.82rem"><a href="mailto:info@lexsecadvisory.com?subject=VeriLink%20Early%20Access" style="color:var(--teal)">Get notified when it launches →</a></p>
+        <div style="font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;color:var(--navy);margin-bottom:.6rem">VeriLink — Coming Soon</div>
+        <p style="font-size:.88rem;color:var(--muted);line-height:1.7;margin-bottom:2rem">Automated environment assessment, regulatory translation, and AI-powered gap analysis. We're building it now. Leave your details to be first in line.</p>
+        <div class="card" style="text-align:left">
+          <div class="card-body" style="display:flex;flex-direction:column;gap:.85rem">
+            <div id="vl-success" style="display:none;background:rgba(11,122,99,.08);border:1px solid rgba(11,122,99,.25);color:var(--teal);padding:.85rem 1rem;font-size:.85rem;border-radius:4px">
+              ✓ You're on the list. We'll be in touch when VeriLink launches.
+            </div>
+            <div id="vl-error" style="display:none;background:rgba(180,30,30,.07);border:1px solid rgba(180,30,30,.2);color:#a02020;padding:.85rem 1rem;font-size:.85rem;border-radius:4px"></div>
+            <div id="vl-form">
+              <div style="display:flex;flex-direction:column;gap:.85rem">
+                <div>
+                  <label style="font-size:.8rem;font-weight:500;color:var(--navy);display:block;margin-bottom:.3rem">Full name <span style="color:#a02020">*</span></label>
+                  <input id="vl-name" type="text" placeholder="Jane Smith" style="width:100%;padding:.6rem .75rem;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:.88rem">
+                </div>
+                <div>
+                  <label style="font-size:.8rem;font-weight:500;color:var(--navy);display:block;margin-bottom:.3rem">Work email <span style="color:#a02020">*</span></label>
+                  <input id="vl-email" type="email" placeholder="jane@company.com" style="width:100%;padding:.6rem .75rem;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:.88rem">
+                </div>
+                <div>
+                  <label style="font-size:.8rem;font-weight:500;color:var(--navy);display:block;margin-bottom:.3rem">Organization <span style="font-size:.75rem;color:var(--muted);font-weight:400">(optional)</span></label>
+                  <input id="vl-org" type="text" placeholder="Acme Corp" style="width:100%;padding:.6rem .75rem;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:.88rem">
+                </div>
+                <button class="btn btn-gold" style="width:100%;margin-top:.25rem" onclick="joinWaitlist()">Notify me when VeriLink launches →</button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     `)
   },
@@ -1563,6 +1587,31 @@ function onboardingNext(currentStep) {
 function onboardingBack(currentStep) {
   const stored = JSON.parse(localStorage.getItem('lexsec_onboarding_draft') || '{}')
   renderOnboardingStep(currentStep - 1, stored)
+}
+
+async function joinWaitlist() {
+  const name  = document.getElementById('vl-name')?.value?.trim()
+  const email = document.getElementById('vl-email')?.value?.trim()
+  const org   = document.getElementById('vl-org')?.value?.trim() || ''
+  const errEl = document.getElementById('vl-error')
+  const sucEl = document.getElementById('vl-success')
+  const form  = document.getElementById('vl-form')
+
+  errEl.style.display = 'none'
+  if (!name || !email) { errEl.textContent = 'Please enter your name and email.'; errEl.style.display = 'block'; return }
+
+  const res  = await post('/api/waitlist', { name, email, org })
+  const data = await res.json()
+  if (res.ok || data.alreadyRegistered) {
+    form.style.display = 'none'
+    sucEl.textContent = data.alreadyRegistered
+      ? '✓ You\'re already on the list — we\'ll be in touch when VeriLink launches.'
+      : '✓ You\'re on the list. We\'ll be in touch when VeriLink launches.'
+    sucEl.style.display = 'block'
+  } else {
+    errEl.textContent = data.error || 'Something went wrong. Please try again.'
+    errEl.style.display = 'block'
+  }
 }
 
 async function logout() {
