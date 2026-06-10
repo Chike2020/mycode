@@ -248,6 +248,7 @@ tr:hover td{background:rgba(11,122,99,.03)}
   .content{padding:1.25rem 1rem}
   .stat-row{grid-template-columns:1fr 1fr}
   .score-wrap{grid-template-columns:1fr}
+  .vl-grid{grid-template-columns:1fr!important}
   /* Horizontally scroll all data tables */
   .card-body{overflow-x:auto;-webkit-overflow-scrolling:touch}
   table{min-width:520px}
@@ -1001,31 +1002,58 @@ const SECTIONS = {
   // VERILINK
   async verilink() {
     setContent(`
-      <div style="max-width:480px;margin:3rem auto;text-align:center">
-        <div style="font-size:2.5rem;margin-bottom:1rem">⚡</div>
-        <div style="font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;color:var(--navy);margin-bottom:.6rem">VeriLink — Coming Soon</div>
-        <p style="font-size:.88rem;color:var(--muted);line-height:1.7;margin-bottom:2rem">Automated environment assessment, regulatory translation, and AI-powered gap analysis. We're building it now. Leave your details to be first in line.</p>
-        <div class="card" style="text-align:left">
-          <div class="card-body" style="display:flex;flex-direction:column;gap:.85rem">
-            <div id="vl-success" style="display:none;background:rgba(11,122,99,.08);border:1px solid rgba(11,122,99,.25);color:var(--teal);padding:.85rem 1rem;font-size:.85rem;border-radius:4px">
-              ✓ You're on the list. We'll be in touch when VeriLink launches.
-            </div>
-            <div id="vl-error" style="display:none;background:rgba(180,30,30,.07);border:1px solid rgba(180,30,30,.2);color:#a02020;padding:.85rem 1rem;font-size:.85rem;border-radius:4px"></div>
-            <div id="vl-form">
-              <div style="display:flex;flex-direction:column;gap:.85rem">
+      <div style="max-width:900px;margin:0 auto">
+        <div style="text-align:center;margin-bottom:2rem">
+          <div style="font-size:2rem;margin-bottom:.6rem">⚡</div>
+          <div style="font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;color:var(--navy);margin-bottom:.5rem">VeriLink — Coming Soon</div>
+          <p style="font-size:.88rem;color:var(--muted);max-width:520px;margin:0 auto;line-height:1.7">The automated compliance engine we're building on top of this platform. Be first to know when it launches.</p>
+        </div>
+
+        <div class="vl-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:start">
+
+          <!-- Feature highlights -->
+          <div>
+            <div style="font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:1.1rem">What's coming</div>
+            ${[
+              ['🔌','Cloud Environment Assessment','Connect to AWS, Azure, and GitHub. Automatically collect CloudTrail logs, IAM policies, S3 configurations, and access controls — no manual screenshots.'],
+              ['⚖','AI Regulatory Translation','Convert HIPAA §164.312, SOC 2 CC6.1, and NIST SP 800-53 requirements into plain English and step-by-step engineering tasks your developers can actually act on.'],
+              ['🔍','Automated Gap Analysis','Compare your live environment against framework requirements and surface findings by severity, with statutory citations and remediation code inline.'],
+              ['🗺','AI Maturity Roadmap','After your first assessment, get a prioritized 90-day roadmap generated from your actual gaps — not a generic checklist.'],
+              ['📄','AI Policy Generation','Describe your environment and get a compliant Information Security Policy, Acceptable Use Policy, or HIPAA Privacy Notice drafted in minutes.'],
+              ['📊','Board-Ready Reports','Export a one-page compliance summary or a full audit-ready evidence pack with your score, findings, and remediation status — formatted for leadership or auditors.'],
+            ].map(([icon,title,desc])=>`
+              <div style="display:flex;gap:.85rem;margin-bottom:1.35rem">
+                <div style="font-size:1.1rem;flex-shrink:0;padding-top:.1rem">${icon}</div>
                 <div>
-                  <label style="font-size:.8rem;font-weight:500;color:var(--navy);display:block;margin-bottom:.3rem">Full name <span style="color:#a02020">*</span></label>
-                  <input id="vl-name" type="text" placeholder="Jane Smith" style="width:100%;padding:.6rem .75rem;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:.88rem">
+                  <div style="font-size:.85rem;font-weight:600;color:var(--navy);margin-bottom:.2rem">${title}</div>
+                  <div style="font-size:.78rem;color:var(--muted);line-height:1.6">${desc}</div>
                 </div>
-                <div>
-                  <label style="font-size:.8rem;font-weight:500;color:var(--navy);display:block;margin-bottom:.3rem">Work email <span style="color:#a02020">*</span></label>
-                  <input id="vl-email" type="email" placeholder="jane@company.com" style="width:100%;padding:.6rem .75rem;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:.88rem">
+              </div>`).join('')}
+          </div>
+
+          <!-- Waitlist form -->
+          <div>
+            <div style="font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:1.1rem">Get early access</div>
+            <div class="card">
+              <div class="card-body" style="display:flex;flex-direction:column;gap:.85rem">
+                <div id="vl-success" style="display:none;background:rgba(11,122,99,.08);border:1px solid rgba(11,122,99,.25);color:var(--teal);padding:.85rem 1rem;font-size:.85rem;border-radius:4px"></div>
+                <div id="vl-error" style="display:none;background:rgba(180,30,30,.07);border:1px solid rgba(180,30,30,.2);color:#a02020;padding:.85rem 1rem;font-size:.85rem;border-radius:4px"></div>
+                <div id="vl-form" style="display:flex;flex-direction:column;gap:.85rem">
+                  <div>
+                    <label style="font-size:.8rem;font-weight:500;color:var(--navy);display:block;margin-bottom:.3rem">Full name <span style="color:#a02020">*</span></label>
+                    <input id="vl-name" type="text" placeholder="Jane Smith" style="width:100%;padding:.6rem .75rem;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:.88rem">
+                  </div>
+                  <div>
+                    <label style="font-size:.8rem;font-weight:500;color:var(--navy);display:block;margin-bottom:.3rem">Work email <span style="color:#a02020">*</span></label>
+                    <input id="vl-email" type="email" placeholder="jane@company.com" style="width:100%;padding:.6rem .75rem;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:.88rem">
+                  </div>
+                  <div>
+                    <label style="font-size:.8rem;font-weight:500;color:var(--navy);display:block;margin-bottom:.3rem">Organization <span style="font-size:.75rem;color:var(--muted);font-weight:400">(optional)</span></label>
+                    <input id="vl-org" type="text" placeholder="Acme Corp" style="width:100%;padding:.6rem .75rem;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:.88rem">
+                  </div>
+                  <button class="btn btn-gold" style="width:100%;margin-top:.25rem" onclick="joinWaitlist()">Notify me when VeriLink launches →</button>
+                  <p style="font-size:.72rem;color:var(--muted);text-align:center;margin:0">No spam. One email when we launch.</p>
                 </div>
-                <div>
-                  <label style="font-size:.8rem;font-weight:500;color:var(--navy);display:block;margin-bottom:.3rem">Organization <span style="font-size:.75rem;color:var(--muted);font-weight:400">(optional)</span></label>
-                  <input id="vl-org" type="text" placeholder="Acme Corp" style="width:100%;padding:.6rem .75rem;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:.88rem">
-                </div>
-                <button class="btn btn-gold" style="width:100%;margin-top:.25rem" onclick="joinWaitlist()">Notify me when VeriLink launches →</button>
               </div>
             </div>
           </div>
