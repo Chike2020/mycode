@@ -4,6 +4,7 @@ import { zValidator } from '@hono/zod-validator'
 import { z } from 'zod'
 import { hashPassword, verifyPassword, signJWT, generateId, slugify } from '../lib/crypto'
 import { requireAuth } from '../middleware/auth'
+import { sendWelcomeEmail } from '../lib/email'
 import type { AppType, User } from '../types'
 
 export const authRoutes = new Hono<AppType>()
@@ -76,6 +77,12 @@ authRoutes.post(
 
     const token = await signJWT({ sub: userId, orgId, role: 'owner' }, c.env.JWT_SECRET)
     setCookie(c, 'session', token, COOKIE_OPTS)
+
+    if (c.env.RESEND_API_KEY) {
+      c.executionCtx.waitUntil(
+        sendWelcomeEmail(c.env.RESEND_API_KEY, email.toLowerCase(), full_name).catch(() => {})
+      )
+    }
 
     return c.json({
       user: { id: userId, email: email.toLowerCase(), full_name },

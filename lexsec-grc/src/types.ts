@@ -3,10 +3,6 @@ export type Env = {
   BUCKET: R2Bucket
   ASSETS: Fetcher
   JWT_SECRET: string
-  STRIPE_SECRET_KEY: string
-  STRIPE_WEBHOOK_SECRET: string
-  STRIPE_PRICE_PRO_MONTHLY: string
-  STRIPE_PRICE_ENTERPRISE_MONTHLY: string
   RESEND_API_KEY: string
   FRONTEND_URL: string
 }
@@ -30,11 +26,8 @@ export type Organization = {
   id: string
   name: string
   slug: string
-  plan: 'free' | 'pro' | 'enterprise'
-  plan_status: 'active' | 'canceled' | 'past_due' | 'trialing'
-  stripe_customer_id: string | null
-  stripe_subscription_id: string | null
-  trial_ends_at: string | null
+  plan: 'free' | 'pro'
+  plan_status: 'active' | 'canceled'
   created_at: string
 }
 
