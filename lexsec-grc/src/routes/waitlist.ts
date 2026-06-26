@@ -31,17 +31,12 @@ waitlistRoutes.post(
     }
 
     if (c.env.RESEND_API_KEY) {
-      console.log('[waitlist] sending emails, key prefix:', c.env.RESEND_API_KEY.slice(0, 8))
-      try {
-        await sendWaitlistConfirmationEmail(c.env.RESEND_API_KEY, cleanEmail, cleanName)
-        console.log('[waitlist] confirmation email sent')
-        await sendWaitlistAdminNotification(c.env.RESEND_API_KEY, cleanName, cleanEmail, cleanOrg)
-        console.log('[waitlist] admin notification sent')
-      } catch (e: unknown) {
-        console.error('[waitlist] email failed:', e instanceof Error ? e.message : String(e))
-      }
-    } else {
-      console.error('[waitlist] RESEND_API_KEY not set — skipping email')
+      c.executionCtx.waitUntil(
+        Promise.all([
+          sendWaitlistConfirmationEmail(c.env.RESEND_API_KEY, cleanEmail, cleanName).catch(() => {}),
+          sendWaitlistAdminNotification(c.env.RESEND_API_KEY, cleanName, cleanEmail, cleanOrg).catch(() => {}),
+        ])
+      )
     }
 
     return c.json({ ok: true }, 201)
