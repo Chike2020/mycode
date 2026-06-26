@@ -67,6 +67,23 @@ nav{flex:1;padding:.75rem 0;overflow-y:auto}
   padding:.25rem 0;display:block;transition:color .2s;
 }
 .sb-logout:hover{color:rgba(255,255,255,.6)}
+.sb-legal{padding:.75rem 1rem;border-top:1px solid rgba(255,255,255,.07);margin-top:auto}
+.sb-legal p{font-size:.62rem;color:rgba(255,255,255,.2);line-height:1.6;font-family:'DM Mono',monospace}
+.sb-legal a{color:rgba(255,255,255,.3);text-decoration:none}
+.sb-legal a:hover{color:rgba(255,255,255,.55)}
+#cookie-banner{position:fixed;bottom:0;left:0;right:0;background:#0E1F3D;color:rgba(255,255,255,.8);
+  font-size:.75rem;padding:.75rem 1.5rem;display:flex;align-items:center;justify-content:space-between;
+  gap:1rem;z-index:9999;border-top:1px solid rgba(200,169,110,.3)}
+#cookie-banner a{color:#C8A96E;text-decoration:underline}
+#cookie-banner button{background:#C8A96E;color:#0E1F3D;border:none;padding:.3rem .9rem;
+  font-size:.72rem;font-weight:600;cursor:pointer;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.legal-page{max-width:760px;padding:2.5rem}
+.legal-page h1{font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--navy);margin-bottom:.5rem}
+.legal-page .legal-date{font-size:.78rem;color:var(--muted);margin-bottom:2rem;font-family:'DM Mono',monospace}
+.legal-page h2{font-size:.95rem;font-weight:700;color:var(--navy);margin:1.75rem 0 .5rem;text-transform:uppercase;letter-spacing:.04em}
+.legal-page p,.legal-page li{font-size:.875rem;color:#1A1A2E;line-height:1.8;margin-bottom:.75rem}
+.legal-page ul{padding-left:1.25rem;margin-bottom:.75rem}
+.legal-page a{color:var(--teal)}
 
 /* ── MAIN ── */
 #main{margin-left:var(--sidebar);flex:1;min-height:100vh;display:flex;flex-direction:column}
@@ -300,6 +317,12 @@ tr:hover td{background:rgba(11,122,99,.03)}
     </div>
   </div>
   <button class="sb-logout" onclick="logout()">Sign out</button>
+  <div class="sb-legal">
+    <p>&copy; 2026 LexSec Advisory LLC.<br>
+      <a href="#" onclick="nav('privacy');return false">Privacy</a> &nbsp;&middot;&nbsp;
+      <a href="#" onclick="nav('terms');return false">Terms</a>
+    </p>
+  </div>
 </aside>
 
 <div id="mob-overlay"></div>
@@ -358,7 +381,7 @@ async function init() {
 }
 
 // ── ROUTING ────────────────────────────────────────────────────────────────
-const TITLES = { dashboard:'Dashboard', onboarding:'Onboarding', policies:'Policies', frameworks:'Framework Controls', evidence:'Evidence', risks:'Risk Register', incidents:'Incidents', assets:'Asset Inventory', vendors:'Vendors', calendar:'Compliance Calendar', audit:'Audit Log', team:'Team', billing:'Billing', settings:'Settings' }
+const TITLES = { dashboard:'Dashboard', onboarding:'Onboarding', policies:'Policies', frameworks:'Framework Controls', evidence:'Evidence', risks:'Risk Register', incidents:'Incidents', assets:'Asset Inventory', vendors:'Vendors', calendar:'Compliance Calendar', audit:'Audit Log', team:'Team', billing:'Billing', settings:'Settings', privacy:'Privacy Policy', terms:'Terms of Service' }
 
 async function nav(section) {
   S.currentSection = section
@@ -1067,6 +1090,111 @@ const SECTIONS = {
     setContent(`<div class="coming-soon"><h3>Organization Settings</h3><p>Manage your organization's name, branding, SSO configuration, and API keys. Coming soon.</p></div>`)
   },
 
+  async privacy() {
+    setContent(`<div class="legal-page">
+      <h1>Privacy Policy</h1>
+      <div class="legal-date">Effective date: 1 June 2026 &nbsp;&middot;&nbsp; LexSec Advisory LLC</div>
+
+      <h2>1. Who we are</h2>
+      <p>LexSec Advisory LLC ("LexSec", "we", "us") operates the GRC platform at app.lexsecadvisory.com and the marketing website at lexsecadvisory.com. Our contact address is <a href="mailto:info@lexsecadvisory.com">info@lexsecadvisory.com</a>.</p>
+
+      <h2>2. Data we collect</h2>
+      <ul>
+        <li><strong>Account data</strong> — name, work email address, and organisation name when you register.</li>
+        <li><strong>GRC content</strong> — risk records, evidence files, compliance notes, and other data you enter into the platform. This data belongs to you.</li>
+        <li><strong>Waitlist data</strong> — name, email, and organisation if you join the VeriLink waitlist.</li>
+        <li><strong>Usage logs</strong> — server-side request logs (IP address, timestamp, endpoint) retained for up to 30 days for security monitoring.</li>
+        <li><strong>Session cookie</strong> — a single HTTP-only cookie used to keep you signed in. No tracking or advertising cookies are set.</li>
+      </ul>
+
+      <h2>3. Legal basis (GDPR)</h2>
+      <p>Where the GDPR applies, we process your data under the following bases:</p>
+      <ul>
+        <li><strong>Contract</strong> — to provide the platform services you signed up for.</li>
+        <li><strong>Legitimate interest</strong> — security monitoring, fraud prevention, and service improvement.</li>
+        <li><strong>Consent</strong> — waitlist sign-up and marketing communications (you may withdraw at any time).</li>
+      </ul>
+
+      <h2>4. How we use your data</h2>
+      <ul>
+        <li>To authenticate you and maintain your session.</li>
+        <li>To store and retrieve the GRC data you create.</li>
+        <li>To send transactional emails (account confirmation, invitations).</li>
+        <li>To notify you about product updates if you have opted in.</li>
+      </ul>
+
+      <h2>5. Data sharing</h2>
+      <p>We do not sell your data. We share data only with the sub-processors needed to deliver the service:</p>
+      <ul>
+        <li><strong>Cloudflare</strong> — hosting, edge network, and database (D1/R2).</li>
+        <li><strong>Resend</strong> — transactional email delivery.</li>
+        <li><strong>Google Workspace</strong> — internal team email.</li>
+      </ul>
+
+      <h2>6. Data retention</h2>
+      <p>Account and GRC data is retained for as long as your account is active. On account closure, data is deleted within 30 days unless legal obligations require longer retention. Waitlist entries are retained until you request removal.</p>
+
+      <h2>7. Your rights</h2>
+      <p>You have the right to access, correct, export, or delete your personal data at any time. To exercise these rights, email <a href="mailto:info@lexsecadvisory.com">info@lexsecadvisory.com</a>. EEA/UK residents may also lodge a complaint with their local supervisory authority.</p>
+
+      <h2>8. Security</h2>
+      <p>All data is transmitted over HTTPS. Passwords are hashed using bcrypt. Access to production systems is restricted to authorised personnel.</p>
+
+      <h2>9. Changes to this policy</h2>
+      <p>We will notify you by email of material changes at least 14 days before they take effect. Continued use after the effective date constitutes acceptance.</p>
+
+      <h2>10. Contact</h2>
+      <p><a href="mailto:info@lexsecadvisory.com">info@lexsecadvisory.com</a></p>
+    </div>`)
+  },
+
+  async terms() {
+    setContent(`<div class="legal-page">
+      <h1>Terms of Service</h1>
+      <div class="legal-date">Effective date: 1 June 2026 &nbsp;&middot;&nbsp; LexSec Advisory LLC</div>
+
+      <h2>1. Acceptance</h2>
+      <p>By creating an account or using the LexSec Advisory platform ("Service"), you agree to these Terms of Service ("Terms"). If you are acting on behalf of an organisation, you confirm you have authority to bind that organisation.</p>
+
+      <h2>2. Description of service</h2>
+      <p>LexSec Advisory provides a cloud-based Governance, Risk, and Compliance (GRC) platform. The Service is provided "as is" and features may change over time with reasonable notice.</p>
+
+      <h2>3. Acceptable use</h2>
+      <p>You agree not to:</p>
+      <ul>
+        <li>Use the Service for any unlawful purpose or in violation of any applicable regulations.</li>
+        <li>Attempt to gain unauthorised access to any part of the Service or its infrastructure.</li>
+        <li>Upload malware, harmful code, or content that infringes third-party rights.</li>
+        <li>Reverse-engineer, decompile, or resell the Service without written permission.</li>
+        <li>Use the Service to store or process data classified above the sensitivity level appropriate for a cloud SaaS platform.</li>
+      </ul>
+
+      <h2>4. Your data</h2>
+      <p>You retain all ownership of the GRC content you create. You grant LexSec Advisory a limited licence to store, process, and display that content solely to provide the Service to you. We do not claim any intellectual property rights over your data.</p>
+
+      <h2>5. Intellectual property</h2>
+      <p>The Service, including its software, design, and documentation, is owned by LexSec Advisory LLC and protected by applicable intellectual property laws. Nothing in these Terms transfers ownership of the Service to you.</p>
+
+      <h2>6. Disclaimer of warranties</h2>
+      <p>THE SERVICE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT. WE DO NOT WARRANT THAT THE SERVICE WILL BE UNINTERRUPTED OR ERROR-FREE.</p>
+
+      <h2>7. Limitation of liability</h2>
+      <p>TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, LEXSEC ADVISORY LLC'S TOTAL LIABILITY TO YOU FOR ANY CLAIM ARISING FROM OR RELATED TO THESE TERMS OR THE SERVICE SHALL NOT EXCEED THE FEES PAID BY YOU IN THE 12 MONTHS PRECEDING THE CLAIM, OR USD 100, WHICHEVER IS GREATER.</p>
+
+      <h2>8. Termination</h2>
+      <p>Either party may terminate at any time. We may suspend or terminate accounts that violate these Terms. On termination, your right to access the Service ceases and your data will be deleted in accordance with our Privacy Policy.</p>
+
+      <h2>9. Governing law</h2>
+      <p>These Terms are governed by the laws of the State of Delaware, United States, without regard to conflict-of-law principles. Disputes shall be resolved by binding arbitration under AAA rules, except that either party may seek injunctive relief in any court of competent jurisdiction.</p>
+
+      <h2>10. Changes</h2>
+      <p>We may update these Terms. Material changes will be notified by email at least 14 days before they take effect.</p>
+
+      <h2>11. Contact</h2>
+      <p><a href="mailto:info@lexsecadvisory.com">info@lexsecadvisory.com</a></p>
+    </div>`)
+  },
+
   // POLICIES
   async policies() {
     const res = await get('/api/policies')
@@ -1639,6 +1767,16 @@ async function joinWaitlist() {
   } else {
     errEl.textContent = data.error || 'Something went wrong. Please try again.'
     errEl.style.display = 'block'
+  }
+}
+
+function dismissCookie() {
+  localStorage.setItem('lexsec_cookie_ok', '1')
+  document.getElementById('cookie-banner').style.display = 'none'
+}
+function initCookieBanner() {
+  if (!localStorage.getItem('lexsec_cookie_ok')) {
+    document.getElementById('cookie-banner').style.display = 'flex'
   }
 }
 
@@ -2363,6 +2501,7 @@ async function goToControl(fw, ctrlId) {
 // ── BOOT ───────────────────────────────────────────────────────────────────
 window.addEventListener('hashchange', () => nav((location.hash.slice(1) || 'dashboard').split('?')[0]))
 init()
+initCookieBanner()
 
 // ── MOBILE SIDEBAR ─────────────────────────────────────────────────────────
 ;(function() {
@@ -2528,6 +2667,12 @@ init()
           </div>
         </div>
       </div>
+
+<div id="cookie-banner" style="display:none">
+  <span>We use a session cookie solely to keep you signed in. No tracking or advertising cookies are used.
+    <a href="#" onclick="nav('privacy');return false">Privacy Policy</a></span>
+  <button onclick="dismissCookie()">Got it</button>
+</div>
 
 </body>
 </html>
