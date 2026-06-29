@@ -32,6 +32,20 @@ export function requireRole(...allowed: string[]) {
   }
 }
 
+export async function requirePlatformAdmin(c: C, next: Next): Promise<Response | void> {
+  const token = getCookie(c, 'session') ?? bearerToken(c)
+  if (!token) return c.json({ error: 'Unauthorized' }, 401)
+  const payload = await verifyJWT(token, c.env.JWT_SECRET)
+  if (!payload) return c.json({ error: 'Invalid or expired session' }, 401)
+  const userId = payload.sub as string
+  const row = await c.env.DB
+    .prepare('SELECT is_platform_admin FROM users WHERE id = ?')
+    .bind(userId).first<{ is_platform_admin: number }>()
+  if (!row || row.is_platform_admin !== 1) return c.json({ error: 'Forbidden' }, 403)
+  c.set('userId', userId)
+  await next()
+}
+
 function bearerToken(c: C): string | undefined {
   const auth = c.req.header('Authorization')
   return auth?.startsWith('Bearer ') ? auth.slice(7) : undefined

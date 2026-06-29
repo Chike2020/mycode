@@ -151,7 +151,7 @@ authRoutes.get('/me', requireAuth, async (c) => {
   const userId = c.get('userId')
 
   const user = await c.env.DB
-    .prepare('SELECT id, email, full_name, created_at FROM users WHERE id = ?')
+    .prepare('SELECT id, email, full_name, created_at, is_platform_admin FROM users WHERE id = ?')
     .bind(userId).first()
   if (!user) return c.json({ error: 'User not found' }, 404)
 

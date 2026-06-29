@@ -308,6 +308,10 @@ tr:hover td{background:rgba(11,122,99,.03)}
     <div class="nav-item" onclick="nav('team')"><span class="nav-icon">👥</span><span>Team</span></div>
     <div class="nav-item" onclick="nav('billing')"><span class="nav-icon">💳</span><span>Billing</span></div>
     <div class="nav-item" onclick="nav('settings')"><span class="nav-icon">⚙</span><span>Settings</span></div>
+    <div id="nav-admin-section" style="display:none">
+      <div class="nav-section">Platform</div>
+      <div class="nav-item" onclick="nav('admin')"><span class="nav-icon">🛡</span><span>Admin</span></div>
+    </div>
   </nav>
   <div class="sb-user">
     <div class="sb-avatar" id="user-avatar">?</div>
@@ -371,6 +375,7 @@ async function init() {
     document.getElementById('user-avatar').textContent = S.user.full_name.charAt(0).toUpperCase()
     document.getElementById('user-role').textContent = S.currentOrg?.role || ''
     document.getElementById('topbar-org').textContent = S.currentOrg?.name || ''
+    if (S.user.is_platform_admin) document.getElementById('nav-admin-section').style.display = ''
 
 
     const hash = (location.hash.slice(1) || 'dashboard').split('?')[0]
@@ -381,7 +386,7 @@ async function init() {
 }
 
 // ── ROUTING ────────────────────────────────────────────────────────────────
-const TITLES = { dashboard:'Dashboard', onboarding:'Onboarding', policies:'Policies', frameworks:'Framework Controls', evidence:'Evidence', risks:'Risk Register', incidents:'Incidents', assets:'Asset Inventory', vendors:'Vendors', calendar:'Compliance Calendar', audit:'Audit Log', team:'Team', billing:'Billing', settings:'Settings', privacy:'Privacy Policy', terms:'Terms of Service' }
+const TITLES = { dashboard:'Dashboard', onboarding:'Onboarding', policies:'Policies', frameworks:'Framework Controls', evidence:'Evidence', risks:'Risk Register', incidents:'Incidents', assets:'Asset Inventory', vendors:'Vendors', calendar:'Compliance Calendar', audit:'Audit Log', team:'Team', billing:'Billing', settings:'Settings', privacy:'Privacy Policy', terms:'Terms of Service', admin:'Platform Admin' }
 
 async function nav(section) {
   S.currentSection = section
@@ -1213,6 +1218,57 @@ const SECTIONS = {
     </div>`)
   },
 
+  // ── PLATFORM ADMIN ────────────────────────────────────────────────────────
+  async admin() {
+    if (!S.user?.is_platform_admin) {
+      setContent(`<div class="empty"><h3>Not authorized</h3><p>This area is restricted to platform administrators.</p></div>`)
+      return
+    }
+    setContent(`
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+        <div>
+          <div style="font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;color:var(--navy)">Platform Admin</div>
+          <div style="font-size:.78rem;color:var(--muted);margin-top:.2rem">Cross-tenant view of accounts, organisations, and waitlist.</div>
+        </div>
+        <div style="display:flex;gap:.5rem">
+          <a href="/api/admin/users.csv" class="btn btn-outline btn-sm">Users CSV</a>
+          <a href="/api/admin/waitlist.csv" class="btn btn-outline btn-sm">Waitlist CSV</a>
+        </div>
+      </div>
+
+      <div id="admin-stats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-bottom:2rem">
+        <div class="stat-card"><div class="stat-label">Total users</div><div class="stat-value" id="st-users">—</div></div>
+        <div class="stat-card"><div class="stat-label">Organisations</div><div class="stat-value" id="st-orgs">—</div></div>
+        <div class="stat-card"><div class="stat-label">Signups (7d)</div><div class="stat-value" id="st-7d">—</div></div>
+        <div class="stat-card"><div class="stat-label">Waitlist</div><div class="stat-value" id="st-waitlist">—</div></div>
+      </div>
+
+      <div class="tabs" style="display:flex;gap:.5rem;margin-bottom:1.25rem;border-bottom:1px solid rgba(14,31,61,.08)">
+        <button class="adm-tab active" data-tab="users" onclick="switchAdminTab('users')">Users</button>
+        <button class="adm-tab" data-tab="orgs" onclick="switchAdminTab('orgs')">Organisations</button>
+        <button class="adm-tab" data-tab="waitlist" onclick="switchAdminTab('waitlist')">Waitlist</button>
+      </div>
+
+      <div id="adm-panel">Loading…</div>
+
+      <style>
+        .stat-card{background:#fff;border:1px solid rgba(14,31,61,.08);padding:1rem 1.1rem}
+        .stat-label{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.4rem;font-family:'DM Mono',monospace}
+        .stat-value{font-family:'Playfair Display',serif;font-size:1.65rem;font-weight:700;color:var(--navy)}
+        .adm-tab{background:none;border:none;padding:.6rem 1rem;font-size:.85rem;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;font-family:'DM Sans',sans-serif}
+        .adm-tab.active{color:var(--navy);border-bottom-color:var(--teal);font-weight:500}
+        .adm-tab:hover{color:var(--navy)}
+      </style>
+    `)
+
+    const stats = await (await get('/api/admin/stats')).json()
+    document.getElementById('st-users').textContent    = stats.users
+    document.getElementById('st-orgs').textContent     = stats.orgs
+    document.getElementById('st-7d').textContent       = stats.signups_7d
+    document.getElementById('st-waitlist').textContent = stats.waitlist
+    await switchAdminTab('users')
+  },
+
   // POLICIES
   async policies() {
     const res = await get('/api/policies')
@@ -1801,6 +1857,59 @@ function initCookieBanner() {
 async function logout() {
   await post('/api/auth/logout', {})
   location.href = '/login.html'
+}
+
+async function switchAdminTab(tab) {
+  document.querySelectorAll('.adm-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab))
+  const panel = document.getElementById('adm-panel')
+  if (!panel) return
+  panel.innerHTML = 'Loading…'
+  try {
+    if (tab === 'users') {
+      const rows = await (await get('/api/admin/users')).json()
+      panel.innerHTML = rows.length === 0
+        ? `<div class="empty"><h3>No users yet</h3></div>`
+        : `<div style="overflow-x:auto"><table>
+            <thead><tr><th>Signed up</th><th>Name</th><th>Email</th><th>Organisation</th><th>Plan</th><th>Role</th><th></th></tr></thead>
+            <tbody>${rows.map(r => `<tr>
+              <td style="font-family:'DM Mono',monospace;font-size:.78rem;color:var(--muted)">${escHtml(r.created_at)}</td>
+              <td><strong>${escHtml(r.full_name || '')}</strong>${r.is_platform_admin ? ' <span class="badge" style="background:rgba(200,169,110,.15);color:#8a6820">Admin</span>' : ''}</td>
+              <td>${escHtml(r.email || '')}</td>
+              <td>${escHtml(r.org_name || '—')}</td>
+              <td style="font-size:.78rem;color:var(--muted)">${escHtml(r.org_plan || '—')}</td>
+              <td>${escHtml(r.role || '—')}</td>
+              <td style="text-align:right;font-family:'DM Mono',monospace;font-size:.72rem;color:rgba(14,31,61,.3)">${escHtml(r.id.slice(0,8))}</td>
+            </tr>`).join('')}</tbody></table></div>`
+    } else if (tab === 'orgs') {
+      const rows = await (await get('/api/admin/orgs')).json()
+      panel.innerHTML = rows.length === 0
+        ? `<div class="empty"><h3>No organisations yet</h3></div>`
+        : `<div style="overflow-x:auto"><table>
+            <thead><tr><th>Created</th><th>Name</th><th>Slug</th><th>Plan</th><th>Status</th><th>Members</th></tr></thead>
+            <tbody>${rows.map(r => `<tr>
+              <td style="font-family:'DM Mono',monospace;font-size:.78rem;color:var(--muted)">${escHtml(r.created_at)}</td>
+              <td><strong>${escHtml(r.name)}</strong></td>
+              <td style="font-family:'DM Mono',monospace;font-size:.78rem">${escHtml(r.slug)}</td>
+              <td>${escHtml(r.plan || '—')}</td>
+              <td style="font-size:.78rem">${escHtml(r.plan_status || '—')}</td>
+              <td>${r.member_count}</td>
+            </tr>`).join('')}</tbody></table></div>`
+    } else if (tab === 'waitlist') {
+      const rows = await (await get('/api/admin/waitlist')).json()
+      panel.innerHTML = rows.length === 0
+        ? `<div class="empty"><h3>No waitlist signups yet</h3></div>`
+        : `<div style="overflow-x:auto"><table>
+            <thead><tr><th>Joined</th><th>Name</th><th>Email</th><th>Organisation</th></tr></thead>
+            <tbody>${rows.map(r => `<tr>
+              <td style="font-family:'DM Mono',monospace;font-size:.78rem;color:var(--muted)">${escHtml(r.created_at)}</td>
+              <td><strong>${escHtml(r.name)}</strong></td>
+              <td>${escHtml(r.email)}</td>
+              <td>${escHtml(r.org || '—')}</td>
+            </tr>`).join('')}</tbody></table></div>`
+    }
+  } catch (e) {
+    panel.innerHTML = `<div class="empty"><h3>Failed to load</h3><p>${escHtml(e.message || String(e))}</p></div>`
+  }
 }
 
 // ── HELPERS ────────────────────────────────────────────────────────────────
